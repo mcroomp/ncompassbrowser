@@ -1,0 +1,39 @@
+// viewhtml.odl : type library source for viewhtml.exe
+
+// This file will be processed by the Make Type Library (mktyplib) tool to
+// produce the type library (viewhtml.tlb).
+
+[ uuid(3B463EF1-AFEE-11CE-8F64-00608C53D263), version(1.0) ]
+library ncompass
+{
+	importlib("stdole32.tlb");
+	
+	//  Primary dispatch interface for CViewhtmlDoc
+	
+	[ uuid(3B463EF2-AFEE-11CE-8F64-00608C53D263) ]
+	dispinterface INcompa
+	{
+		properties:
+			// NOTE - ClassWizard will maintain property information here.
+			//    Use extreme caution when editing this section.
+			//{{AFX_ODL_PROP(CViewhtmlDoc)
+			//}}AFX_ODL_PROP
+			
+		methods:
+			// NOTE - ClassWizard will maintain method information here.
+			//    Use extreme caution when editing this section.
+			//{{AFX_ODL_METHOD(CViewhtmlDoc)
+			//}}AFX_ODL_METHOD
+
+	};
+
+	//  Class information for CViewhtmlDoc
+	
+	[ uuid(3B463EF0-AFEE-11CE-8F64-00608C53D263) ]
+	coclass CViewhtmlDoc
+	{
+		[default] dispinterface INcompa;
+	};
+
+	//{{AFX_APPEND_ODL}}
+};

@@ -1,0 +1,775 @@
+//Microsoft Visual C++ generated resource script.
+//
+#include "inc\resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "inc\\resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""res\\viewhtml.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "\r\n"
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#include ""afxres.rc""  \011// Standard components\r\n"
+    "#include ""afxprint.rc""\011// printing/print preview resources\r\n"
+    "#include ""afxolecl.rc""\011// OLE container resources\r\n"
+    "\0"
+END
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+IDR_MAINFRAME           ICON    DISCARDABLE     "res\\viewhtml.ico"
+IDR_CONTTYPE            ICON    DISCARDABLE     "res\\contdoc.ico"
+IDI_BAD_GIF             ICON    DISCARDABLE     "res\\bad_gif.ico"
+IDI_RED_LIGHT           ICON    DISCARDABLE     "res\\RED.ICO"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDR_MAINFRAME           BITMAP  MOVEABLE PURE   "res\\toolbar.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINFRAME MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Open File...\tCtrl+O",       ID_FILE_OPEN
+        MENUITEM "Open URL...",                 ID_FILE_OPEN_URL
+        MENUITEM SEPARATOR
+        MENUITEM "&Print...\tCtrl+P",           ID_FILE_PRINT
+        MENUITEM "Print Pre&view",              ID_FILE_PRINT_PREVIEW
+        MENUITEM "P&rint Setup...",             ID_FILE_PRINT_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Find...",                     ID_EDIT_FIND
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Button Bar",                 ID_VIEW_TOOLBAR
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+        MENUITEM "&Location Bar",               ID_VIEW_LOCATION_BAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Reload",                     ID_RELOAD
+    END
+    POPUP "&Go"
+    BEGIN
+        MENUITEM "&Back",                       ID_GO_BACK
+        MENUITEM "&Forward",                    ID_GO_FORWARD
+        MENUITEM "&Home",                       ID_GO_HOME
+        MENUITEM SEPARATOR
+        MENUITEM "&Stop Loading",               ID_STOP_LOADING
+    END
+    POPUP "Hot&list"
+    BEGIN
+        MENUITEM "&Add to Hotlist",             ID_ADD_BOOKMARK
+        MENUITEM "&Edit Hotlist...",            ID_EDIT_BOOKMARKS
+        MENUITEM SEPARATOR
+        MENUITEM "Hotlist",                     ID_BOOKMARK00, GRAYED
+    END
+    POPUP "&Options"
+    BEGIN
+        MENUITEM "&Preferences...",             ID_OPTIONS_PREFERENCES
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About Ncompass...",          ID_APP_ABOUT
+    END
+END
+
+IDR_CNTR_INPLACE MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New\tCtrl+N",                ID_FILE_NEW
+        MENUITEM "&Open...\tCtrl+O",            ID_FILE_OPEN
+        MENUITEM "&Save\tCtrl+S",               ID_FILE_SAVE
+        MENUITEM "Save &As...",                 ID_FILE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "&Print...\tCtrl+P",           ID_FILE_PRINT
+        MENUITEM "Print Pre&view",              ID_FILE_PRINT_PREVIEW
+        MENUITEM "P&rint Setup...",             ID_FILE_PRINT_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "Recent File",                 ID_FILE_MRU_FILE1, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    MENUITEM SEPARATOR
+    MENUITEM SEPARATOR
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAINFRAME ACCELERATORS PRELOAD MOVEABLE PURE 
+BEGIN
+    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL
+    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL
+    "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL
+    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT
+    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL
+    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY 
+    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT
+    VK_ESCAPE,      ID_CANCEL_EDIT_CNTR,    VIRTKEY, NOINVERT
+END
+
+IDR_CNTR_INPLACE ACCELERATORS PRELOAD MOVEABLE PURE 
+BEGIN
+    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL
+    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL
+    "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY 
+    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT
+    VK_ESCAPE,      ID_CANCEL_EDIT_CNTR,    VIRTKEY, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  34, 22, 255, 282
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About Ncompass"
+FONT 8, "MS Sans Serif"
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,18,20
+    LTEXT           "Ncompass version 0.9",IDC_STATIC,40,10,119,8
+    LTEXT           "Copyright \251 1995 by ExCITE\nAll rights reserved.",
+                    IDC_STATIC,40,25,94,20
+    DEFPUSHBUTTON   "OK",IDOK,209,7,32,14,WS_GROUP
+    LTEXT           "email: kroomp@sfu.ca\nhttp: http://rosencrantz.educ.sfu.ca/kristof/",
+                    IDC_STATIC,106,203,149,19
+    LTEXT           "email: kkaratal@sfu.ca http:http://rosencrantz.educ.sfu.ca/kerem/",
+                    IDC_STATIC,106,179,148,18
+    LTEXT           "email: jkeinane@sfu.ca",IDC_STATIC,106,228,77,8
+    LTEXT           "This software is based in part on the work of the Independent JPEG Group",
+                    IDC_STATIC,50,246,174,19
+    LTEXT           "Send bug reports to bugs@oberon.educ.sfu.ca",IDC_STATIC,
+                    49,268,161,8
+    LTEXT           "Chief Architects :",IDC_STATIC,29,46,58,9
+    LTEXT           "Kerem Karatal - Object Distribution Architecture",
+                    IDC_STATIC,46,57,162,10
+    LTEXT           "Kristof Roomp - Main Browser Architecture",IDC_STATIC,
+                    46,68,142,10
+    LTEXT           "Programming :",IDC_STATIC,29,82,80,10
+    LTEXT           "Kristof Roomp - Main browser features.",IDC_STATIC,45,
+                    94,132,10
+    LTEXT           "Kerem Karatal - Main OLE (OCX Container) features.",
+                    IDC_STATIC,45,116,176,10
+    LTEXT           "Texture mapping sample.",IDC_STATIC,95,105,113,10
+    LTEXT           "Sample OLE Controls.",IDC_STATIC,95,127,110,10
+    LTEXT           "John Keinanen - Sample OLE Controls",IDC_STATIC,45,138,
+                    157,10
+    LTEXT           "Windows 95/NT installation, registration scripts.",
+                    IDC_STATIC,98,149,154,10
+    LTEXT           "Contact Info :",IDC_STATIC,29,166,59,10
+    LTEXT           "Kristof Roomp",IDC_STATIC,41,204,58,10
+    LTEXT           "Kerem Karatal",IDC_STATIC,41,180,52,10
+    LTEXT           "John Keinanen",IDC_STATIC,41,227,57,10
+END
+
+IDD_INSERTCTL DIALOG DISCARDABLE  0, 0, 330, 92
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Insert Control"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,270,9,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,270,26,50,14
+    LTEXT           "Control:",-1,9,4,27,8
+    LISTBOX         IDC_CONTROLS,7,14,253,73,LBS_SORT | LBS_USETABSTOPS | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_OPEN_URL DIALOG DISCARDABLE  0, 0, 185, 52
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Open URL"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_URL_EDIT,5,8,174,16,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,75,34,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,130,34,50,14
+END
+
+IDD_LOCATION_BAR DIALOG DISCARDABLE  0, 0, 282, 24
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_LOCATION,38,5,237,13,ES_AUTOHSCROLL
+    LTEXT           "Location:",IDC_STATIC,3,8,32,8
+    DEFPUSHBUTTON   "Open",ID_OPEN_LOCATION,247,4,29,14,NOT WS_VISIBLE
+END
+
+IDD_CNTL_DLG DIALOG DISCARDABLE  0, 0, 258, 183
+STYLE WS_POPUP | WS_VISIBLE | WS_THICKFRAME
+FONT 10, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "YES",IDOK,68,165,50,14
+    PUSHBUTTON      "NO",IDCANCEL,135,165,50,14
+    CTEXT           "NCompass will download the application listed below if you click on the OK prompt. Please note that this will be a fully functional application used by pages on this website. Protect yourself from potentially malicious code",
+                    IDC_STATIC,29,5,220,25
+    ICON            IDI_RED_LIGHT,IDC_STATIC,10,9,18,20
+    LTEXT           "Company Name :",IDC_STATIC,49,60,57,12
+    LTEXT           "File Description :",IDC_STATIC,49,74,62,12
+    LTEXT           "Product Version :",IDC_STATIC,49,88,64,12
+    LTEXT           "Product Name :",IDC_STATIC,49,46,65,12
+    LTEXT           "Legal Copyright :",IDC_STATIC,49,102,66,12
+    LTEXT           "Legal Trademarks :",IDC_STATIC,49,116,65,12
+    LTEXT           "HTTP Site :",IDC_STATIC,49,130,52,12
+    LTEXT           "Do you still want to download ?",IDC_STATIC,81,149,99,
+                    10
+    EDITTEXT        IDC_PRODUCT_NAME,116,44,96,12,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    EDITTEXT        IDC_COMPANY_NAME,116,58,96,12,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    EDITTEXT        IDC_FILE_DESCRIPTION,116,72,96,12,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    EDITTEXT        IDC_PRODUCT_VERSION,116,86,96,12,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    EDITTEXT        IDC_LEGAL_COPYRIGHT,116,100,96,12,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    EDITTEXT        IDC_LEGAL_TRADEMARKS,116,114,96,12,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    EDITTEXT        IDC_HTTP_SITE,116,128,96,12,ES_AUTOHSCROLL | ES_READONLY
+    CTEXT           "and do not download anything from a site you do not trust.",
+                    IDC_STATIC,30,29,221,11
+END
+
+IDD_SAVE_URL DIALOG DISCARDABLE  0, 0, 186, 74
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Open URL"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Save as file",IDOK,26,54,50,14
+    PUSHBUTTON      "Discard",IDCANCEL,98,54,50,14
+    CTEXT           "The URL you have opened does not have a viewer associated with it. Do you wish to save the data to a file or discard it?",
+                    IDC_STATIC,6,12,173,31
+END
+
+IDD_BOOKMARKS DIALOG DISCARDABLE  0, 0, 259, 167
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Edit Hotlist"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LISTBOX         IDC_BOOKMARK_LIST,3,6,199,122,WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "New Item...",IDC_BUTTON_NEW_ITEM,2,147,50,14
+    PUSHBUTTON      "Edit Item...",IDC_BUTTON_EDIT_ITEM,53,147,50,14
+    PUSHBUTTON      "Delete Item",IDC_BUTTON_DELETE_ITEM,104,147,50,14
+    PUSHBUTTON      "Move Up",IDC_BUTTON_MOVE_UP,155,147,50,14
+    PUSHBUTTON      "Move Down",IDC_BUTTON_MOVE_DOWN,206,147,50,14
+    DEFPUSHBUTTON   "OK",IDOK,207,6,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,207,22,50,14
+    PUSHBUTTON      "Open URL",IDC_BUTTON_OPEN_URL,207,39,50,14
+    LTEXT           "",IDC_LIST_URL,4,130,196,8
+END
+
+IDD_EDIT_BOOKMARK DIALOG DISCARDABLE  0, 0, 250, 70
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Edit Hotlist"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_TITLE,6,21,177,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_URL,6,49,177,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,192,6,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,192,23,50,14
+    LTEXT           "Title",IDC_STATIC,2,10,16,8
+    LTEXT           "URL",IDC_STATIC,3,37,16,8
+END
+
+IDD_PREF_NETWORK DIALOG DISCARDABLE  0, 0, 268, 146
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Network and Cache"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "SMTP Mail Server",IDC_STATIC,6,12,60,8
+    EDITTEXT        IDC_SMTP_MAIL_SERVER,6,23,253,13,ES_AUTOHSCROLL
+    LTEXT           "HTTP Proxy",IDC_STATIC,6,42,40,8
+    EDITTEXT        IDC_HTTP_PROXY,6,52,186,13,ES_AUTOHSCROLL
+    LTEXT           "Maximum Connections ",IDC_STATIC,6,75,75,8
+    EDITTEXT        IDC_NUM_CONNECTIONS,82,73,40,13,ES_AUTOHSCROLL
+    LTEXT           "Cache Directory",IDC_STATIC,6,89,54,8
+    EDITTEXT        IDC_CACHE_DIRECTORY,6,100,253,13,ES_AUTOHSCROLL
+    LTEXT           "Cache Size:",IDC_STATIC,6,121,40,8
+    RTEXT           "1",IDC_CACHE_MEGABYTES,51,121,27,8
+    CONTROL         "Generic2",IDC_CHANGE_MEGABYTE,"msctls_updown32",0xb0,84,
+                    118,10,14
+    LTEXT           "megabyte(s)",IDC_STATIC,99,121,40,8
+    PUSHBUTTON      "Clear Disk Cache Now",IDC_CLEAR_DISK_CACHE,180,118,78,
+                    14
+    EDITTEXT        IDC_PORT_NUMBER,221,52,40,13,ES_AUTOHSCROLL
+    LTEXT           "Port",IDC_PORT_TEXT,198,54,15,8
+END
+
+IDD_PREF_USERINFO DIALOG DISCARDABLE  0, 0, 268, 146
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "User Info"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "User Name",IDC_STATIC,6,12,37,8
+    EDITTEXT        IDC_USER_NAME,6,23,253,13,ES_AUTOHSCROLL
+    LTEXT           "Email Address",IDC_STATIC,6,42,47,8
+    EDITTEXT        IDC_USER_EMAIL,6,52,253,13,ES_AUTOHSCROLL
+    LTEXT           "Home Page",IDC_STATIC,6,73,39,8
+    EDITTEXT        IDC_HOME_PAGE,6,85,253,13,ES_AUTOHSCROLL
+    CONTROL         "Load home page on startup",IDC_LOAD_HOME_PAGE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,6,102,102,10
+END
+
+IDD_PREF_OLE_CONTROLS DIALOG DISCARDABLE  0, 0, 268, 146
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "OLE Controls"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "OLE Control Storage Directory",IDC_STATIC,6,12,99,8
+    EDITTEXT        IDC_OCX_DIRECTORY,6,23,253,13,ES_AUTOHSCROLL
+    LISTBOX         IDC_CONTROL_LIST,5,56,253,65,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Currently Registered Controls",IDC_STATIC,6,45,96,8
+    PUSHBUTTON      "Unregister Control",IDC_UNREGISTER_CONTROL,5,125,64,14
+END
+
+IDD_SEND_MAIL DIALOG DISCARDABLE  0, 0, 247, 199
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Send Mail"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_MESSAGE_TO,37,11,198,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_MESSAGE_SUBJECT,37,28,198,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_MESSAGE_CC,37,45,198,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_MESSAGE_BODY,8,67,227,103,ES_MULTILINE | WS_VSCROLL | 
+                    0x1000
+    PUSHBUTTON      "Cancel",IDCANCEL,131,176,50,14
+    DEFPUSHBUTTON   "Send",IDOK,185,176,50,14
+    LTEXT           "To:",IDC_STATIC,8,13,12,8
+    LTEXT           "Subject:",IDC_STATIC,8,30,26,8
+    LTEXT           "cc:",IDC_STATIC,8,47,10,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 0,0,0,1
+ PRODUCTVERSION 0,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName", "ExCITE\0"
+            VALUE "FileDescription", "Ncompass Web Browser\0"
+            VALUE "FileVersion", "0, 0, 0, 1\0"
+            VALUE "InternalName", "Ncompass\0"
+            VALUE "LegalCopyright", "Copyright \251 1995 by ExCITE\0"
+            VALUE "OriginalFilename", "NCOMPASS.EXE\0"
+            VALUE "ProductName", "Ncompass Web Browser\0"
+            VALUE "ProductVersion", "0, 0, 0, 1\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_HAND_CURSOR         CURSOR  DISCARDABLE     "RES\\CURSOR1.CUR"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDP_OLE_INIT_FAILED     "OLE initialization failed.  Make sure that the OLE libraries are the correct version."
+    IDP_FAILED_TO_CREATE    "Failed to create object.  Make sure the object is entered in the system registry."
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDR_MAINFRAME           "Ncompass\n\nNcompa\n\n\nNcompass.Document\nNcompa Document"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    AFX_IDS_APP_TITLE       "Ncompass"
+    AFX_IDS_IDLEMESSAGE     "Ready"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_INDICATOR_EXT        "EXT"
+    ID_INDICATOR_CAPS       "CAP"
+    ID_INDICATOR_NUM        "NUM"
+    ID_INDICATOR_SCRL       "SCRL"
+    ID_INDICATOR_OVR        "OVR"
+    ID_INDICATOR_REC        "REC"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FILE_NEW             "Create a new document\nNew"
+    ID_FILE_OPEN            "Open an existing document\nOpen"
+    ID_FILE_CLOSE           "Close the active document\nClose"
+    ID_FILE_SAVE            "Save the active document\nSave"
+    ID_FILE_SAVE_AS         "Save the active document with a new name\nSave As"
+    ID_FILE_PAGE_SETUP      "Change the printing options\nPage Setup"
+    ID_FILE_PRINT_SETUP     "Change the printer and printing options\nPrint Setup"
+    ID_FILE_PRINT           "Print the active document\nPrint"
+    ID_FILE_PRINT_PREVIEW   "Display full pages\nPrint Preview"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_APP_ABOUT            "Display program information, version number and copyright\nAbout"
+    ID_APP_EXIT             "Quit the application; prompts to save documents\nExit"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FILE_MRU_FILE1       "Open this document"
+    ID_FILE_MRU_FILE2       "Open this document"
+    ID_FILE_MRU_FILE3       "Open this document"
+    ID_FILE_MRU_FILE4       "Open this document"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_NEXT_PANE            "Switch to the next window pane\nNext Pane"
+    ID_PREV_PANE            "Switch back to the previous window pane\nPrevious Pane"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_WINDOW_SPLIT         "Split the active window into panes\nSplit"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_EDIT_CLEAR           "Erase the selection\nErase"
+    ID_EDIT_CLEAR_ALL       "Erase everything\nErase All"
+    ID_EDIT_COPY            "Copy the selection and put it on the Clipboard\nCopy"
+    ID_EDIT_CUT             "Cut the selection and put it on the Clipboard\nCut"
+    ID_EDIT_FIND            "Find the specified text\nFind"
+    ID_EDIT_PASTE           "Insert Clipboard contents\nPaste"
+    ID_EDIT_PASTE_LINK      "Insert Clipboard contents and a link to its source\nPaste Link"
+    ID_EDIT_PASTE_SPECIAL   "Insert Clipboard contents with options\nPaste Special"
+    ID_EDIT_REPEAT          "Repeat the last action\nRepeat"
+    ID_EDIT_REPLACE         "Replace specific text with different text\nReplace"
+    ID_EDIT_SELECT_ALL      "Select the entire document\nSelect All"
+    ID_EDIT_UNDO            "Undo the last action\nUndo"
+    ID_EDIT_REDO            "Redo the previously undone action\nRedo"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_VIEW_TOOLBAR         "Show or hide the button bar\nToggle Button Bar"
+    ID_VIEW_STATUS_BAR      "Show or hide the status bar\nToggle StatusBar"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_OLE_INSERT_NEW       "Insert new embedded object\nNew Object"
+    ID_OLE_EDIT_LINKS       "Edit linked objects\nEdit Links"
+    ID_OLE_EDIT_CONVERT     "Convert object to different type\nConvert Object"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_OLE_VERB_FIRST       "Activate embedded or linked object"
+    57873                   "Activate embedded or linked object"
+    57874                   "Activate embedded or linked object"
+    57875                   "Activate embedded or linked object"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_SCSIZE          "Change the window size"
+    AFX_IDS_SCMOVE          "Change the window position"
+    AFX_IDS_SCMINIMIZE      "Reduce the window to an icon"
+    AFX_IDS_SCMAXIMIZE      "Enlarge the window to full size"
+    AFX_IDS_SCNEXTWINDOW    "Switch to the next document window"
+    AFX_IDS_SCPREVWINDOW    "Switch to the previous document window"
+    AFX_IDS_SCCLOSE         "Close the active window and prompts to save the documents"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_SCRESTORE       "Restore the window to normal size"
+    AFX_IDS_SCTASKLIST      "Activate Task List"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_PREVIEW_CLOSE   "Close print preview mode\nCancel Preview"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_VTBOOL              "Boolean (T/F)"
+    IDS_VTI2                "2-Byte Integer"
+    IDS_VTI4                "4-Byte Integer"
+    IDS_VTR4                "4-Byte Real"
+    IDS_VTBSTR              "String"
+    IDS_VTCOLOR             "Color"
+    IDS_VTFONT              "Font"
+    IDS_VTOTHER             "Unknown (can't set value)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_AMODENAME_USERMODE  "UserMode"
+    IDS_AMODENAME_UIDEAD    "UIDead"
+    IDS_AMODENAME_DISPLAYHATCHING "DisplayHatching"
+    IDS_AMODENAME_DISPLAYGRABHANDLES "DisplayGrabHandles"
+    IDS_APROPNAME_ACTIVECONTROL "ActiveControl"
+    IDS_APROPNAME_TEXTALIGN "TextAlign"
+    IDS_APROPNAME_BACKCOLOR "BackColor"
+    IDS_APROPNAME_FONT      "Font"
+    IDS_APROPNAME_FORECOLOR "ForeColor"
+    IDS_APROPNAME_SCALEUNITS "ScaleUnits"
+    IDS_APROPNAME_DISPLAYNAME "DisplayName"
+    IDS_APROPNAME_LOCALEID  "LocaleID"
+    IDS_APROPNAME_MESSAGEREFLECT "MessageReflect"
+    IDS_APROPNAME_USERDIRECTORY "UserDirectory"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BOUNDPROP_PARAMS_ELLIPSIS "[...]"
+    IDS_BOUNDPROP_CHANGED   "' changed"
+    IDS_BOUNDPROP_PREFIX    "property '"
+    IDS_BOUNDPROP_REQEDIT   "'; OK to change?"
+    IDS_BOUNDPROP_REQEDIT_YES "  (YES)"
+    IDS_BOUNDPROP_REQEDIT_NO "  (NO)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_VIEW_LOCATION_BAR    "Hide or show the location bar\nToggle Location Bar"
+    ID_FILE_OPEN_URL        "Opens a URL on the network\nOpen URL"
+    ID_GO_BACK              "Go to previous page\nBack"
+    ID_GO_FORWARD           "Go forward one page\nForward"
+    ID_GO_HOME              "Go to home page\nHome"
+    ID_RELOAD               "Reloads the document from the network\nReload"
+    ID_LOAD_IMAGES          "Load images in file\nLoad images"
+    ID_STOP_LOADING         "Stop loading the current file\nStop loading"
+    ID_OPTIONS_PREFERENCES  "Set the preferences for NCompasss\nSet Preferences"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_BOOKMARK00           "Opens the specified bookmark"
+    ID_BOOKMARK01           "Opens the specified bookmark"
+    ID_BOOKMARK02           "Opens the specified bookmark"
+    ID_BOOKMARK03           "Opens the specified bookmark"
+    ID_BOOKMARK04           "Opens the specified bookmark"
+    ID_BOOKMARK05           "Opens the specified bookmark"
+    ID_BOOKMARK06           "Opens the specified bookmark"
+    ID_BOOKMARK07           "Opens the specified bookmark"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_BOOKMARK08           "Opens the specified bookmark"
+    ID_BOOKMARK09           "Opens the specified bookmark"
+    ID_BOOKMARK10           "Opens the specified bookmark"
+    ID_BOOKMARK11           "Opens the specified bookmark"
+    ID_BOOKMARK12           "Opens the specified bookmark"
+    ID_BOOKMARK13           "Opens the specified bookmark"
+    ID_BOOKMARK14           "Opens the specified bookmark"
+    ID_BOOKMARK15           "Opens the specified bookmark"
+    ID_BOOKMARK16           "Opens the specified bookmark"
+    ID_BOOKMARK17           "Opens the specified bookmark"
+    ID_BOOKMARK18           "Opens the specified bookmark"
+    ID_BOOKMARK19           "Opens the specified bookmark"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_URL_TYPE_UNKNOWN    "The URL ""%s"" cannot be loaded because it requires a protocol that is not currently supported."
+    IDS_METHOD_TYPE_BAD     "The %s protocol does not support this method."
+    IDS_BAD_URL             "The URL ""%s"" is not a valid URL."
+    IDS_FILE_CANNOT_OPEN    "Cannot open the file ""%s"" for reading."
+    IDS_FILE_EXCEPTION      "An error occurred while attempting to read the file ""%s""."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_WSANOTINITIALISED   "Windows Sockets has not been initialized.."
+    IDS_WSAENETDOWN         "The Windows Sockets implementation has detected that the network subsystem has failed."
+    IDS_WSAEINPROGRESS      "A blocking Windows Sockets operation is in progress."
+    IDS_WSAEWOULDBLOCK      "The asynchronous operation cannot be scheduled at this time due to resource or other constraints within the Windows Sockets implementation."
+    IDS_WSAENOTSOCK         "The descriptor is not a socket."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DNS_WSATRY_AGAIN    "Host not found, or there an error resolving the host name."
+    IDS_DNS_WSAENOBUFS      "No/insufficient buffer space is available."
+    IDS_DNS_WSAHOST_NOT_FOUND "The host does not exist."
+    IDS_DNS_WSANO_RECOVERY  "A non recoverable error has occurred resolving host name."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DNS_WSANO_DATA      "The DNS server could not be located."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_HTTP_ERROR_400      "The server ""%s"" has returned the following error:\n400 - The request could not by understood by the server due to malformed syntax."
+    IDS_HTTP_ERROR_401      "The server ""%s"" has returned the following error:\n401 - The request requires user authenticaion. This feature will be included in future versions of NCompass."
+    IDS_HTTP_ERROR_403      "The server ""%s"" has returned the following error:\n403 - The server is refusing to perform the request for an unspecified reason."
+    IDS_HTTP_ERROR_404      "The server ""%s"" has returned the following error:\n404 - The server has not found anything matching the given URL."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_HTTP_ERROR_500      "The server ""%s"" has returned the following error:\n500 - The server has encountered an unexpected condition which prevented it from fulfilling the request.."
+    IDS_HTTP_ERROR_501      "The server ""%s"" has returned the following error:\n501 - The server does not support the functionality required to fulfill the request."
+    IDS_HTTP_ERROR_502      "The server ""%s"" has returned the following error:\n502 - The server received an invalid response from the gateway or upstream server it accessed in attempting to fulfill the request."
+    IDS_HTTP_ERROR_503      "The server ""%s"" has returned the following error:\n503 - The server is currently unable to handle the request due to a temporary overloading or maintenance of the server."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_HTTP_ERROR_UNKNOWN  "The server ""%s"" has returned the following error:\n%s - Unknown error has occurred."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CON_WSAEADDRINUSE   "The specfied address is already in use."
+    IDS_CON_WSAEADDRNOTAVAIL 
+                            "The specified address is not available from the local machine."
+    IDS_CON_WSAEAFNOSUPPORT "Addresses in the specified family cannot be used with this socket."
+    IDS_CON_WSAECONNREFUSED "The attempt to connect was forcefully rejected."
+    IDS_CON_WSAEFAULT       "The namelen argument is incorrect."
+    IDS_CON_WSAEINVAL       "The socket is not bound to an address."
+    IDS_CON_WSAEISCONN      "The socket is already connected."
+    IDS_CON_WSAEMFILE       "No more file descriptors are available."
+    IDS_CON_WSAENETUNREACH  "The network can't be reached from this host at this time."
+    IDS_CON_WSAETIMEDOUT    "Attempt to connect timed out without establishing a connection."
+    IDS_CON_WSAENOBUFS      "No/insufficient buffer space is available."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SEND_WSAEACCES      "The requested address is a broadcast address, but the appropriate flag was not set."
+    IDS_SEND_WSAEFAULT      "The buf argument is not in a valid part of the user address space."
+    IDS_SEND_WSAENETRESET   "The connection must be reset because the Windows Sockets implementation dropped it."
+    IDS_SEND_WSAENOBUFS     "The Windows Sockets implementation reports a buffer deadlock."
+    IDS_SEND_WSAEOPNOTSUPP  "MSG_OOB was specified, but the socket is not of type SOCK_STREAM."
+    IDS_SEND_WSAESHUTDOWN   "The socket has been shutdown."
+    IDS_SEND_WSAEMSGSIZE    "The socket is of type SOCK_DGRAM, and the datagram is larger than the maximum supported by the Windows Sockets implementation."
+    IDS_SEND_WSAECONNABORTED 
+                            "The virtual circuit was aborted due to timeout or other failure."
+    IDS_SEND_WSAECONNRESET  "The virtual circuit was reset by the remote side."
+    IDS_SEND_WSAENOTCONN    "The socket is not connected."
+    IDS_SEND_WSAEINVAL      "The socket has not been bound with bind."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_HTTP_AGENT_NAME     "NCompass Version 1A2"
+    IDS_HTTP_CONNECT_FAILED "Connect to host %s failed due to the following reason:\n%s"
+    IDS_HTTP_SEND_FAILED    "Could not send request header to host %s due to the following reason:\n%s"
+    IDS_HTTP_RECV_FAILED    "Could not read data from host %s due to the following reason:\n%s"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_RECV_WSAEMSGSIZE    "The datagram was too large to fit into the specified buffer and was truncated.\n"
+END
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "res\viewhtml.rc2"  // non-Microsoft Visual C++ edited resources
+
+#define _AFX_NO_SPLITTER_RESOURCES
+#include "afxres.rc"  	// Standard components
+#include "afxprint.rc"	// printing/print preview resources
+#include "afxolecl.rc"	// OLE container resources
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
