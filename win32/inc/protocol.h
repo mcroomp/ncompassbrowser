@@ -65,8 +65,15 @@ public:
 	virtual void AbortLoadThread();
 	virtual void WaitEndLoadThread();
 private:
-	CThreadSocket m_socket;
+	BOOL SetSession(LPVOID session);
+	void CloseSession(LPVOID session);
+	BOOL IsAborted();
+
+	CAccessLock m_access_lock;
+	LPVOID m_session;
+	BOOL m_aborted;
 	HANDLE m_thread_done_semaphore;
 
 	friend UINT HTTPWorkerThread( LPVOID lparam );
+	friend UINT WinHTTPWorkerThread( LPVOID lparam );
 	};

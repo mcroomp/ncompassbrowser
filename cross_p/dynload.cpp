@@ -160,7 +160,8 @@ void CDynamicLoad::InvokeLoadingThread()
 		m_loading_protocol = new CProtocolFile(this);
 		m_loading_protocol->BeginLoadThread();
 		}
-	else if (strnicmp(m_url, "http:", 5) == 0)
+	else if (strnicmp(m_url, "http:", 5) == 0 ||
+			 strnicmp(m_url, "https:", 6) == 0)
 		{
 		m_current_list = LIST_LOADING;
 		m_list_position = g_loading_list.AddTail( this );

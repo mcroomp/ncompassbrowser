@@ -51,6 +51,7 @@ void CAccessLock::Unlock()
 	m_is_locked = FALSE;
 	m_source_file = NULL;
 	m_line_number = 0;
+	m_thread_owner = NULL;
 
 	if (InterlockedDecrement(&m_interlock) >= 0)
 		{

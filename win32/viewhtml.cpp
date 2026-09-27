@@ -185,7 +185,7 @@ BOOL CViewhtmlApp::InitInstance()
 	
 	if (m_lpCmdLine[0] != '\0')
 		{
-		// TODO: add command line processing here
+		OpenDocumentFile(m_lpCmdLine);
 		}
 	else
 		{

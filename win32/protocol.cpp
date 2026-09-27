@@ -9,6 +9,8 @@
 
 #ifndef _PROTOCOL_H_
 #include "protocol.h"
+
+#include <winhttp.h>
 #endif
 
 #define WM_HTTP_SOCKET_EVENT 	(WM_USER)
@@ -222,7 +224,6 @@ UINT FileWorkerThread( LPVOID lparam )
 				}			
 			}
 
-
 		CString progress;
 		progress.Format("Opening file %s", filename);
 		
@@ -391,6 +392,8 @@ CProtocolHTTP::CProtocolHTTP(CDynamicLoad *load_object)
 	: CProtocol(load_object )
 	{
 	m_thread_handle = NULL;
+	m_session = NULL;
+	m_aborted = FALSE;
 	m_thread_done_semaphore = CreateSemaphore(NULL, 0, 1, NULL);
 	}
 
@@ -402,7 +405,7 @@ CProtocolHTTP::~CProtocolHTTP()
 
 void CProtocolHTTP::BeginLoadThread()
 	{
-	m_thread_handle = AfxBeginThread( HTTPWorkerThread, (LPVOID)this );
+	m_thread_handle = AfxBeginThread( WinHTTPWorkerThread, (LPVOID)this );
 	}
 
 void CProtocolHTTP::AbortLoadThread()
@@ -411,7 +414,14 @@ void CProtocolHTTP::AbortLoadThread()
 	
 	// do everything possible to get the thread to teminate as quickly as possible
 
-	m_socket.Abort();
+	m_access_lock.DEBUG_LOCK();
+	m_aborted = TRUE;
+	HINTERNET session = (HINTERNET)m_session;
+	m_session = NULL;
+	m_access_lock.Unlock();
+
+	if (session)
+		WinHttpCloseHandle(session);
 
 	WaitForSingleObject( m_thread_done_semaphore, INFINITE );
 	m_thread_handle = NULL;
@@ -422,6 +432,43 @@ void CProtocolHTTP::WaitEndLoadThread()
 	ASSERT(m_thread_handle);
 	WaitForSingleObject( m_thread_done_semaphore, INFINITE );
 	m_thread_handle = NULL;
+	}
+
+BOOL CProtocolHTTP::SetSession(LPVOID session)
+	{
+	m_access_lock.DEBUG_LOCK();
+	if (m_aborted)
+		{
+		m_access_lock.Unlock();
+		return FALSE;
+		}
+	m_session = session;
+	m_access_lock.Unlock();
+	return TRUE;
+	}
+
+void CProtocolHTTP::CloseSession(LPVOID session)
+	{
+	BOOL close_session = FALSE;
+
+	m_access_lock.DEBUG_LOCK();
+	if (m_session == session)
+		{
+		m_session = NULL;
+		close_session = TRUE;
+		}
+	m_access_lock.Unlock();
+
+	if (close_session)
+		WinHttpCloseHandle((HINTERNET)session);
+	}
+
+BOOL CProtocolHTTP::IsAborted()
+	{
+	m_access_lock.DEBUG_LOCK();
+	BOOL aborted = m_aborted;
+	m_access_lock.Unlock();
+	return aborted;
 	}
 
 BOOL ParseHeader(BOOL& first_line, LPBYTE &buffer,INT32& amount,CString& current_line,CMapStringToString& mime_map, INT32& response_code)
@@ -490,6 +537,352 @@ BOOL ParseHeader(BOOL& first_line, LPBYTE &buffer,INT32& amount,CString& current
 	return FALSE;
 	}
 
+CString GetWinHTTPError()
+	{
+	DWORD error = GetLastError();
+	char buffer[256];
+
+	if (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL, error, 0, buffer, sizeof(buffer), NULL) == 0)
+		{
+		CString message;
+		message.Format("WinHTTP error %lu", error);
+		return message;
+		}
+
+	return CString(buffer);
+	}
+
+BOOL QueryWinHTTPHeader(HINTERNET request, DWORD query, CString& value)
+	{
+	DWORD size = 0;
+	WinHttpQueryHeaders(request, query, WINHTTP_HEADER_NAME_BY_INDEX,
+		NULL, &size, WINHTTP_NO_HEADER_INDEX);
+
+	if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+		return FALSE;
+
+	LPWSTR buffer = new WCHAR[size / sizeof(WCHAR)];
+	BOOL result = WinHttpQueryHeaders(request, query, WINHTTP_HEADER_NAME_BY_INDEX,
+		buffer, &size, WINHTTP_NO_HEADER_INDEX);
+
+	if (result)
+		value = CString(buffer);
+
+	delete [] buffer;
+	return result;
+	}
+
+UINT WinHTTPWorkerThread( LPVOID lparam )
+	{
+	CProtocolHTTP *protocol = (CProtocolHTTP *)lparam;
+	CDynamicLoad *dlobject = protocol->m_load_object;
+	HINTERNET session = NULL;
+	HINTERNET connection = NULL;
+	HINTERNET request = NULL;
+	CString hostname;
+	CString progress;
+	CString error_message;
+	CString url;
+	CString post_headers;
+	CString post_data;
+	CString agent_name;
+	CString header_value;
+	CStringW wide_url;
+	CStringW wide_hostname;
+	CStringW request_path;
+	CStringW wide_agent_name;
+	CStringW proxy;
+	CStringW wide_post_headers;
+	CMapStringToString mime_map;
+	URL_COMPONENTS components;
+	METHOD_TYPE method;
+	LOAD_STATE load_state = LOAD_STATE_LOADING;
+	DWORD access_type = WINHTTP_ACCESS_TYPE_DEFAULT_PROXY;
+	LPCWSTR proxy_name = WINHTTP_NO_PROXY_NAME;
+	LPCWSTR verb = L"GET";
+	DWORD flags = 0;
+	LPVOID post_buffer = WINHTTP_NO_REQUEST_DATA;
+	DWORD post_length = 0;
+	DWORD status_code = 0;
+	DWORD status_size = sizeof(status_code);
+	DWORD final_url_size = 0;
+	DWORD amount_read = 0;
+	INT32 total_bytes_loaded = 0;
+	BYTE buffer[BUFFER_SIZE];
+	UINT error_id = IDS_HTTP_CONNECT_FAILED;
+	UINT result = 1;
+
+	dlobject->DEBUG_LOCK();
+	url = dlobject->GetURL();
+	method = dlobject->GetMethodType();
+	post_headers = dlobject->GetPostHeaders();
+	post_data = dlobject->GetPostData();
+	dlobject->Unlock();
+
+	wide_url = url;
+	memset(&components, 0, sizeof(components));
+	components.dwStructSize = sizeof(components);
+	components.dwHostNameLength = (DWORD)-1;
+	components.dwUrlPathLength = (DWORD)-1;
+	components.dwExtraInfoLength = (DWORD)-1;
+
+	if (!WinHttpCrackUrl(wide_url, 0, 0, &components))
+		{
+		error_message = GetWinHTTPError();
+		goto error_exit;
+		}
+
+	wide_hostname = CStringW(components.lpszHostName, components.dwHostNameLength);
+	request_path = CStringW(components.lpszUrlPath, components.dwUrlPathLength);
+	if (components.dwExtraInfoLength)
+		request_path += CStringW(components.lpszExtraInfo, components.dwExtraInfoLength);
+	if (request_path.IsEmpty())
+		request_path = L"/";
+
+	hostname = CString(wide_hostname);
+	progress.Format("Contacting host %s.", hostname);
+	dlobject->DEBUG_LOCK();
+	dlobject->SetProgressMessage(progress);
+	dlobject->Unlock();
+
+	agent_name.LoadString(IDS_HTTP_AGENT_NAME);
+	wide_agent_name = agent_name;
+
+	if (!theApp.m_HttpProxy.IsEmpty())
+		{
+		proxy.Format(L"%S:%u", (LPCSTR)theApp.m_HttpProxy,
+			theApp.m_HttpProxyPort);
+		access_type = WINHTTP_ACCESS_TYPE_NAMED_PROXY;
+		proxy_name = proxy;
+		}
+
+	session = WinHttpOpen(wide_agent_name, access_type, proxy_name,
+		WINHTTP_NO_PROXY_BYPASS, 0);
+	if (!session)
+		{
+		error_message = GetWinHTTPError();
+		goto error_exit;
+		}
+
+	if (!protocol->SetSession(session))
+		{
+		WinHttpCloseHandle(session);
+		session = NULL;
+		goto aborted;
+		}
+
+	connection = WinHttpConnect(session, wide_hostname,
+		components.nPort, 0);
+	if (!connection)
+		{
+		error_message = GetWinHTTPError();
+		goto error_exit;
+		}
+
+	if (method == METHOD_HEAD)
+		verb = L"HEAD";
+	else if (method == METHOD_POST)
+		verb = L"POST";
+
+	if (components.nScheme == INTERNET_SCHEME_HTTPS)
+		flags |= WINHTTP_FLAG_SECURE;
+
+	request = WinHttpOpenRequest(connection, verb, request_path, NULL,
+		WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, flags);
+	if (!request)
+		{
+		error_message = GetWinHTTPError();
+		goto error_exit;
+		}
+
+	progress.Format("Host %s contacted. Sending HTTP command.", hostname);
+	dlobject->DEBUG_LOCK();
+	dlobject->SetProgressMessage(progress);
+	dlobject->Unlock();
+
+	wide_post_headers = post_headers;
+	post_buffer = post_data.IsEmpty() ? WINHTTP_NO_REQUEST_DATA :
+		(LPVOID)(LPCSTR)post_data;
+	post_length = post_data.GetLength();
+
+	error_id = IDS_HTTP_SEND_FAILED;
+	if (!WinHttpSendRequest(request,
+		wide_post_headers.IsEmpty() ? WINHTTP_NO_ADDITIONAL_HEADERS :
+			(LPCWSTR)wide_post_headers,
+		wide_post_headers.IsEmpty() ? 0 : (DWORD)-1,
+		post_buffer, post_length, post_length, 0) ||
+		!WinHttpReceiveResponse(request, NULL))
+		{
+		error_message = GetWinHTTPError();
+		goto error_exit;
+		}
+
+	if (!WinHttpQueryHeaders(request,
+		WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+		WINHTTP_HEADER_NAME_BY_INDEX, &status_code, &status_size,
+		WINHTTP_NO_HEADER_INDEX))
+		{
+		error_message = GetWinHTTPError();
+		goto error_exit;
+		}
+
+	WinHttpQueryOption(request, WINHTTP_OPTION_URL, NULL, &final_url_size);
+	if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+		{
+		LPWSTR final_url = new WCHAR[final_url_size / sizeof(WCHAR)];
+		if (WinHttpQueryOption(request, WINHTTP_OPTION_URL,
+			final_url, &final_url_size))
+			{
+			CString final_url_string(final_url);
+			if (final_url_string != url)
+				{
+				dlobject->DEBUG_LOCK();
+				protocol->SetURL(final_url_string);
+				dlobject->Unlock();
+				}
+			}
+		delete [] final_url;
+		}
+
+	if (status_code < 200 || status_code > 299)
+		{
+		switch(status_code)
+			{
+			case 400:
+				error_id = IDS_HTTP_ERROR_400;
+				break;
+			case 401:
+				error_id = IDS_HTTP_ERROR_401;
+				break;
+			case 403:
+				error_id = IDS_HTTP_ERROR_403;
+				break;
+			case 404:
+				error_id = IDS_HTTP_ERROR_404;
+				break;
+			case 500:
+				error_id = IDS_HTTP_ERROR_500;
+				break;
+			case 501:
+				error_id = IDS_HTTP_ERROR_501;
+				break;
+			case 502:
+				error_id = IDS_HTTP_ERROR_502;
+				break;
+			case 503:
+				error_id = IDS_HTTP_ERROR_503;
+				break;
+			default:
+				error_id = IDS_HTTP_ERROR_UNKNOWN;
+				error_message.Format("%lu", status_code);
+				break;
+			}
+		goto http_error;
+		}
+
+	if (QueryWinHTTPHeader(request, WINHTTP_QUERY_CONTENT_TYPE, header_value))
+		{
+		int separator = header_value.Find(';');
+		if (separator != -1)
+			header_value = header_value.Left(separator);
+		header_value.TrimLeft();
+		header_value.TrimRight();
+		header_value.MakeLower();
+		mime_map["content-type"] = header_value;
+		}
+	else
+		{
+		mime_map["content-type"] = "unknown";
+		}
+
+	if (QueryWinHTTPHeader(request, WINHTTP_QUERY_CONTENT_LENGTH, header_value))
+		mime_map["content-length"] = header_value;
+
+	load_state = protocol->CallOnBeginLoading(mime_map);
+	if (load_state == LOAD_STATE_COMPLETE || load_state == LOAD_STATE_ABORTED)
+		goto done_loading;
+
+	error_id = IDS_HTTP_RECV_FAILED;
+
+	while(1)
+		{
+		amount_read = 0;
+		if (!WinHttpReadData(request, buffer, sizeof(buffer), &amount_read))
+			{
+			error_message = GetWinHTTPError();
+			goto error_exit;
+			}
+
+		if (amount_read == 0)
+			break;
+
+		total_bytes_loaded += amount_read;
+		progress.Format("%ld bytes received from %s",
+			total_bytes_loaded, hostname);
+		dlobject->DEBUG_LOCK();
+		dlobject->SetProgressMessage(progress);
+		dlobject->Unlock();
+
+		load_state = protocol->CallOnLoading(buffer, amount_read);
+		if (load_state == LOAD_STATE_COMPLETE ||
+			load_state == LOAD_STATE_ABORTED)
+			break;
+		}
+
+done_loading:
+	load_state = protocol->CallOnEndLoading();
+	progress.Format("Connection to %s closed.", hostname);
+	dlobject->DEBUG_LOCK();
+	protocol->SetLoadState(load_state);
+	protocol->CallNotify(CHANGEFLAG_DONE);
+	dlobject->SetProgressMessage(progress);
+	dlobject->Unlock();
+	result = 0;
+	goto cleanup;
+
+http_error:
+	dlobject->DEBUG_LOCK();
+	if (error_id == IDS_HTTP_ERROR_UNKNOWN)
+		dlobject->SetErrorMessage(error_id, hostname, error_message);
+	else
+		dlobject->SetErrorMessage(error_id, hostname);
+	dlobject->Unlock();
+	goto fail_loading;
+
+error_exit:
+	if (protocol->IsAborted())
+		goto aborted;
+
+	dlobject->DEBUG_LOCK();
+	dlobject->SetErrorMessage(error_id, hostname, error_message);
+	dlobject->Unlock();
+
+fail_loading:
+	dlobject->DEBUG_LOCK();
+	protocol->SetLoadState(LOAD_STATE_ABORTED);
+	dlobject->Unlock();
+	protocol->CallOnEndLoading();
+	dlobject->DEBUG_LOCK();
+	protocol->CallNotify(CHANGEFLAG_DONE);
+	dlobject->Unlock();
+	goto cleanup;
+
+aborted:
+	result = 1;
+
+cleanup:
+	if (request)
+		WinHttpCloseHandle(request);
+	if (connection)
+		WinHttpCloseHandle(connection);
+	if (session)
+		protocol->CloseSession(session);
+	ReleaseSemaphore(protocol->m_thread_done_semaphore, 1, NULL);
+	return result;
+	}
+
+#if 0
 #define HTTP_STATE_READING_HEADER   1
 #define HTTP_STATE_READING_DATA 	2
 
@@ -763,4 +1156,5 @@ done_complete:
 			}
 		}
 	}
-	
+
+#endif
