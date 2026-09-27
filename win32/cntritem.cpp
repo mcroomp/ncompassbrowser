@@ -145,10 +145,11 @@ void CViewhtmlCntrItem::OnDeactivateUI(BOOL bUndoable)
 	// Deactivate();   // nothing fancy here -- just deactivate the object
 }
 
-void CViewhtmlCntrItem::OnUpdateFrameTitle()
+BOOL CViewhtmlCntrItem::OnUpdateFrameTitle()
 {
 	// Do Nothing.  A Good OCX Container doesn't display the name
 	// of its UIActive control.
+	return TRUE;
 
 	// Optionally, you could switch on the registry entry of the UIActive
 	// item to determine if it is not a control and then call the base
@@ -247,3 +248,4 @@ void CViewhtmlCntrItem::Dump(CDumpContext& dc) const
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
+

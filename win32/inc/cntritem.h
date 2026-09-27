@@ -46,7 +46,7 @@ public:
 	virtual void OnGetItemPosition(CRect& rPosition);
 	virtual void OnDeactivateUI(BOOL bUndoable);
 	virtual BOOL OnChangeItemPosition(const CRect& rectPos);
-	virtual void OnUpdateFrameTitle();
+	virtual BOOL OnUpdateFrameTitle();
 	//}}AFX_VIRTUAL
 
 // Implementation

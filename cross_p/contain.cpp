@@ -68,7 +68,7 @@ POSITION CContainer::GetHeadPosition() const
 	if (m_first_chunk == NULL)
 		return NULL;
 	else
-		return m_first_chunk;
+		return reinterpret_cast<POSITION>(m_first_chunk);
 	}
 	
 CContainerItem *CContainer::GetNext(POSITION& pos) const
@@ -82,7 +82,7 @@ CContainerItem *CContainer::GetNext(POSITION& pos) const
 	INT32 * curpos = (INT32 *)( ((BYTE *)pos) + cursize );
 	if (*curpos == 0)
 		{
-		pos = *(void **)(curpos+1);
+		pos = reinterpret_cast<POSITION>(*(void **)(curpos+1));
 		}
 	else if (*curpos == 0xffffffff)
 		{
@@ -98,7 +98,7 @@ CContainerItem *CContainer::GetNext(POSITION& pos) const
 
 POSITION CContainer::Find( CContainerItem *i) const
 	{
-	return (( (INT32 *)i) - 1);
+	return reinterpret_cast<POSITION>(((INT32 *)i) - 1);
 	}
 	
 void *CContainer::Allocate(INT32 size)

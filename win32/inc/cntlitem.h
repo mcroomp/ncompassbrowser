@@ -143,7 +143,7 @@ public:
     DISPID		m_EventID;   
     
     DISPPARAMS FAR* 	GetParams() { return &m_LastParams; };
-	LPTSTR		m_szObjCLSID;	// string CLSID of the 	object
+	CString		m_szObjCLSID;	// string CLSID of the object
 
 protected:                          
 	// Source location for the OCX in URL format
@@ -182,7 +182,7 @@ protected:
     LPCONNECTIONPOINT 	m_pConnPtrBind;
 	DWORD				m_dwBindConnection;
 	USHORT				m_nBinds;
-	BINDINFO*			m_pBindInfo;
+	NCompassBindInfo*	m_pBindInfo;
 
 public:
 	// Attributes for the OLE event interface
@@ -294,7 +294,7 @@ protected:
     BEGIN_INTERFACE_PART(EventHandler, IDispatch)
         STDMETHOD(GetTypeInfoCount)(unsigned int FAR*);
         STDMETHOD(GetTypeInfo)(unsigned int, LCID, ITypeInfo FAR* FAR*);
-        STDMETHOD(GetIDsOfNames)(REFIID, LPTSTR FAR*, unsigned int, LCID, DISPID FAR*);
+        STDMETHOD(GetIDsOfNames)(REFIID, LPOLESTR FAR*, unsigned int, LCID, DISPID FAR*);
         STDMETHOD(Invoke)(DISPID, REFIID, LCID, unsigned short, DISPPARAMS FAR*,
                           VARIANT FAR*, EXCEPINFO FAR*, unsigned int FAR*);
     END_INTERFACE_PART(EventHandler)
@@ -309,7 +309,7 @@ protected:
     BEGIN_INTERFACE_PART(AmbientProps, IDispatch)
         STDMETHOD(GetTypeInfoCount)(unsigned int FAR*);
         STDMETHOD(GetTypeInfo)(unsigned int, LCID, ITypeInfo FAR* FAR*);
-        STDMETHOD(GetIDsOfNames)(REFIID, LPTSTR FAR*, unsigned int, LCID, DISPID FAR*);
+        STDMETHOD(GetIDsOfNames)(REFIID, LPOLESTR FAR*, unsigned int, LCID, DISPID FAR*);
         STDMETHOD(Invoke)(DISPID, REFIID, LCID, unsigned short, DISPPARAMS FAR*,
                           VARIANT FAR*, EXCEPINFO FAR*, unsigned int FAR*);
     END_INTERFACE_PART(AmbientProps)

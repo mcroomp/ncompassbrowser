@@ -482,7 +482,7 @@ void CViewhtmlApp::OnUpdateBookmarks(CCmdUI* pCmdUI)
 		return;
 
 	// delete previous commands
-	for (iMRU = 0; iMRU < m_last_menu_size; iMRU++)
+	for (int iMRU = 0; iMRU < m_last_menu_size; iMRU++)
 		pCmdUI->m_pMenu->DeleteMenu(pCmdUI->m_nID + iMRU, MF_BYCOMMAND);
 
 	m_last_menu_size = m_bookmarks.GetBookmarkCount();
@@ -569,6 +569,7 @@ int CViewhtmlApp::Run()
 	// for tracking the idle time state
 	BOOL bIdle = TRUE;
 	LONG lIdleCount = 0;
+	MSG pendingMessage;
 	
 	ASSERT_VALID(this);
 
@@ -596,17 +597,17 @@ int CViewhtmlApp::Run()
 					return ExitInstance();
 
 				// reset "no idle" state after pumping "normal" message
-				if (IsIdleMessage(&m_msgCur))
+				if (IsIdleMessage(AfxGetCurrentMessage()))
 					{
 					bIdle = TRUE;
 					lIdleCount = 0;
 					}
 				} 
-			while (::PeekMessage(&m_msgCur, NULL, NULL, NULL, PM_NOREMOVE));
+			while (::PeekMessage(&pendingMessage, NULL, NULL, NULL, PM_NOREMOVE));
 
 			// timeout, do idles
 			while (bIdle &&
-				!::PeekMessage(&m_msgCur, NULL, NULL, NULL, PM_NOREMOVE))
+				!::PeekMessage(&pendingMessage, NULL, NULL, NULL, PM_NOREMOVE))
 				{
 				// call OnIdle while in bIdle state
 				if (!OnIdle(lIdleCount++))

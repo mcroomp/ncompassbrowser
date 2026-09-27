@@ -75,7 +75,7 @@ LOAD_STATE CDynLoadDiskFile::OnLoading(LPCBYTE buffer, INT32 buffer_size)
 	{
 	DEBUG_LOCK();
 	m_diskFile->SeekToEnd();
-	m_diskFile->WriteHuge(buffer, buffer_size);
+	m_diskFile->Write(buffer, static_cast<UINT>(buffer_size));
 	Notify( CHANGEFLAG_FILE_GROW );
 	Unlock();
 

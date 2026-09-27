@@ -41,13 +41,13 @@ typedef PARAMPROPINFO FAR*	LPPARAMPROPINFO;
 
 
 ///////////////////////////////////////////////////////////////////////////
-// BINDINFO -- OLE Control Data Binding Information Structure
+// NCompassBindInfo -- OLE Control Data Binding Information Structure
 
-struct BINDINFO
+struct NCompassBindInfo
 {
-    BINDINFO() { m_nParamCount = 0; m_lpParamProps = NULL;
+    NCompassBindInfo() { m_nParamCount = 0; m_lpParamProps = NULL;
     			 m_nFuncCount = 0; m_lpFuncProps = NULL; }
-    ~BINDINFO();
+    ~NCompassBindInfo();
     UINT m_nParamCount;
     PARAMPROPINFO* m_lpParamProps;
 	UINT m_nFuncCount;

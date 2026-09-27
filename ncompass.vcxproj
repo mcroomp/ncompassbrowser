@@ -1,0 +1,168 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="cross_p\bigstr.cpp" />
+    <ClCompile Include="cross_p\contain.cpp" />
+    <ClCompile Include="cross_p\dynload.cpp" />
+    <ClCompile Include="cross_p\fmthtml.cpp" />
+    <ClCompile Include="cross_p\mimeload.cpp" />
+    <ClCompile Include="cross_p\picture.cpp" />
+    <ClCompile Include="cross_p\readgif.cpp" />
+    <ClCompile Include="cross_p\readhtml.cpp" />
+    <ClCompile Include="cross_p\readjpeg.cpp" />
+    <ClCompile Include="cross_p\tblsize.cpp" />
+    <ClCompile Include="jpeg\jcomapi.cpp" />
+    <ClCompile Include="jpeg\jdapi.cpp" />
+    <ClCompile Include="jpeg\jdcoefct.cpp" />
+    <ClCompile Include="jpeg\jdcolor.cpp" />
+    <ClCompile Include="jpeg\jddctmgr.cpp" />
+    <ClCompile Include="jpeg\jdhuff.cpp" />
+    <ClCompile Include="jpeg\jdmainct.cpp" />
+    <ClCompile Include="jpeg\jdmarker.cpp" />
+    <ClCompile Include="jpeg\jdmaster.cpp" />
+    <ClCompile Include="jpeg\jdmerge.cpp" />
+    <ClCompile Include="jpeg\jdpostct.cpp" />
+    <ClCompile Include="jpeg\jdsample.cpp" />
+    <ClCompile Include="jpeg\jerror.cpp" />
+    <ClCompile Include="jpeg\jidctfst.cpp" />
+    <ClCompile Include="jpeg\jmemmgr.cpp" />
+    <ClCompile Include="jpeg\jmemnobs.cpp" />
+    <ClCompile Include="jpeg\jquant1.cpp" />
+    <ClCompile Include="jpeg\jutils.cpp" />
+    <ClCompile Include="win32\bitblt.cpp" />
+    <ClCompile Include="win32\bookmark.cpp" />
+    <ClCompile Include="win32\cntlitem.cpp" />
+    <ClCompile Include="win32\cntritem.cpp" />
+    <ClCompile Include="win32\ddskfile.cpp" />
+    <ClCompile Include="win32\dlgpref.cpp" />
+    <ClCompile Include="win32\dmemfile.cpp" />
+    <ClCompile Include="win32\dopenurl.cpp" />
+    <ClCompile Include="win32\inctldlg.cpp" />
+    <ClCompile Include="win32\mainfrm.cpp" />
+    <ClCompile Include="win32\mutex.cpp" />
+    <ClCompile Include="win32\protocol.cpp" />
+    <ClCompile Include="win32\smtp.cpp" />
+    <ClCompile Include="win32\stdafx.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="win32\tsocket.cpp" />
+    <ClCompile Include="win32\viewhdoc.cpp" />
+    <ClCompile Include="win32\viewhtml.cpp" />
+    <ClCompile Include="win32\viewhvw.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="win32\viewhtml.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="win32\inc\bitblt.h" />
+    <ClInclude Include="win32\inc\bookmark.h" />
+    <ClInclude Include="win32\inc\cntlinfo.h" />
+    <ClInclude Include="win32\inc\cntlitem.h" />
+    <ClInclude Include="win32\inc\cntritem.h" />
+    <ClInclude Include="win32\inc\ddskfile.h" />
+    <ClInclude Include="win32\inc\dlgpref.h" />
+    <ClInclude Include="win32\inc\dmemfile.h" />
+    <ClInclude Include="win32\inc\dopenurl.h" />
+    <ClInclude Include="win32\inc\inctldlg.h" />
+    <ClInclude Include="win32\inc\mainfrm.h" />
+    <ClInclude Include="win32\inc\mutex.h" />
+    <ClInclude Include="win32\inc\oleimpl.h" />
+    <ClInclude Include="win32\inc\protocol.h" />
+    <ClInclude Include="win32\inc\resource.h" />
+    <ClInclude Include="win32\inc\smtp.h" />
+    <ClInclude Include="win32\inc\stdafx.h" />
+    <ClInclude Include="win32\inc\tsocket.h" />
+    <ClInclude Include="win32\inc\viewhdoc.h" />
+    <ClInclude Include="win32\inc\viewhtml.h" />
+    <ClInclude Include="win32\inc\viewhvw.h" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{0AC0D66A-7202-475C-BCE2-08A9C1CDE1D2}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>ncompass</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_WIN32_WINNT=0x0601;USES_OLE_CONTROLS;USES_INTERNET;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>cross_p\inc;win32\inc;jpeg\inc</AdditionalIncludeDirectories>
+      <PrecompiledHeaderFile>cross_p.h</PrecompiledHeaderFile>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <ConformanceMode>false</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>cross_p.h</PrecompiledHeaderFile>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_WINNT=0x0601;USES_OLE_CONTROLS;USES_INTERNET;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>cross_p\inc;win32\inc;jpeg\inc</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ConformanceMode>false</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

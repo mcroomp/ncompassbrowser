@@ -51,7 +51,7 @@ protected:
 #endif
 
     CFontHolder* 	m_lpFontHolder;
-    CString 		m_strFaceName;
+    CStringW 		m_strFaceName;
     FONTDESC 		m_fntdesc;
 
 // Operations

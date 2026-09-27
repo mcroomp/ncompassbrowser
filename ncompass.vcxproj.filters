@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="cross_p\bigstr.cpp" />
+    <ClCompile Include="cross_p\contain.cpp" />
+    <ClCompile Include="cross_p\dynload.cpp" />
+    <ClCompile Include="cross_p\fmthtml.cpp" />
+    <ClCompile Include="cross_p\mimeload.cpp" />
+    <ClCompile Include="cross_p\picture.cpp" />
+    <ClCompile Include="cross_p\readgif.cpp" />
+    <ClCompile Include="cross_p\readhtml.cpp" />
+    <ClCompile Include="cross_p\readjpeg.cpp" />
+    <ClCompile Include="cross_p\tblsize.cpp" />
+    <ClCompile Include="jpeg\jcomapi.cpp" />
+    <ClCompile Include="jpeg\jdapi.cpp" />
+    <ClCompile Include="jpeg\jdcoefct.cpp" />
+    <ClCompile Include="jpeg\jdcolor.cpp" />
+    <ClCompile Include="jpeg\jddctmgr.cpp" />
+    <ClCompile Include="jpeg\jdhuff.cpp" />
+    <ClCompile Include="jpeg\jdmainct.cpp" />
+    <ClCompile Include="jpeg\jdmarker.cpp" />
+    <ClCompile Include="jpeg\jdmaster.cpp" />
+    <ClCompile Include="jpeg\jdmerge.cpp" />
+    <ClCompile Include="jpeg\jdpostct.cpp" />
+    <ClCompile Include="jpeg\jdsample.cpp" />
+    <ClCompile Include="jpeg\jerror.cpp" />
+    <ClCompile Include="jpeg\jidctfst.cpp" />
+    <ClCompile Include="jpeg\jmemmgr.cpp" />
+    <ClCompile Include="jpeg\jmemnobs.cpp" />
+    <ClCompile Include="jpeg\jquant1.cpp" />
+    <ClCompile Include="jpeg\jutils.cpp" />
+    <ClCompile Include="win32\bitblt.cpp" />
+    <ClCompile Include="win32\bookmark.cpp" />
+    <ClCompile Include="win32\cntlitem.cpp" />
+    <ClCompile Include="win32\cntritem.cpp" />
+    <ClCompile Include="win32\ddskfile.cpp" />
+    <ClCompile Include="win32\dlgpref.cpp" />
+    <ClCompile Include="win32\dmemfile.cpp" />
+    <ClCompile Include="win32\dopenurl.cpp" />
+    <ClCompile Include="win32\inctldlg.cpp" />
+    <ClCompile Include="win32\mainfrm.cpp" />
+    <ClCompile Include="win32\mutex.cpp" />
+    <ClCompile Include="win32\protocol.cpp" />
+    <ClCompile Include="win32\smtp.cpp" />
+    <ClCompile Include="win32\stdafx.cpp" />
+    <ClCompile Include="win32\tsocket.cpp" />
+    <ClCompile Include="win32\viewhdoc.cpp" />
+    <ClCompile Include="win32\viewhtml.cpp" />
+    <ClCompile Include="win32\viewhvw.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="win32\viewhtml.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="inc">
+      <UniqueIdentifier>{bcd4b95d-33f3-46df-95d7-5a2da2f8ed1a}</UniqueIdentifier>
+      <Extensions>*.h</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="win32\inc\bitblt.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

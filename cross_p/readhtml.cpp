@@ -623,7 +623,7 @@ char ParseIsoCode( const char *source )
 	else
 		{
 		// find the length of the string
-		LPSTR p = strchr(source, ';');
+		LPCSTR p = strchr(source, ';');
 		if (p != NULL && (p - source) < MAX_ISO_LENGTH )
 			{
 			int length = (p - source);
@@ -1390,9 +1390,8 @@ got_a_tag:
 							CString t = a->m_value;
 
 							// find some way of converting a->m_value to a guid
-							LPTSTR v = t.GetBuffer( t.GetLength() );
-						 	IIDFromString(v , &guid);
-							t.ReleaseBuffer();
+							CStringW value(t);
+						 	IIDFromString(value, &guid);
 							}
 						else if (a->m_name == "olesrc")
 							{

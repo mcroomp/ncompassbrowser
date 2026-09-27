@@ -653,8 +653,8 @@ error_exit:
 			// socket connection has been closed
 			}
 
-		total_bytes_loaded += r;
-		amount = r;
+		total_bytes_loaded += amount_read;
+		amount = amount_read;
 		buffer = receive_buffer;
 
 		progress.Format("%ld bytes received from %s", total_bytes_loaded, hostname);

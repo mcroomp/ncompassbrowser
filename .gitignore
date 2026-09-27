@@ -1,0 +1,17 @@
+# Visual Studio build output and local state
+.vs/
+Debug/
+Release/
+ipch/
+*.sdf
+*.VC.db
+*.user
+*.ncrunchsolution.user
+
+# Conversion artifacts and unrelated generated wizard project
+win32/UpgradeLog.XML
+win32/_UpgradeReport_Files/
+ncompass/
+
+# Locally downloaded historical web content
+archive/

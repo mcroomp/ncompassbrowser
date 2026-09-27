@@ -454,9 +454,9 @@ BOOL CViewhtmlDoc::SetDefaultAmbientProps()
     lpVar = &m_apropStd[nStdIdx].varValue;
     VariantClear (lpVar);
     {
-        m_strFaceName = _T("MS Sans Serif");
+        m_strFaceName = L"MS Sans Serif";
 		m_fntdesc.cbSizeofstruct = sizeof(m_fntdesc);
-        m_fntdesc.lpstrName = (LPTSTR) (const TCHAR *) m_strFaceName;
+        m_fntdesc.lpstrName = m_strFaceName.GetBuffer();
         m_fntdesc.cySize.Lo = 80000L;
         m_fntdesc.cySize.Hi = 0;
         m_fntdesc.sWeight = FW_BOLD;
@@ -489,14 +489,14 @@ BOOL CViewhtmlDoc::SetDefaultAmbientProps()
     m_apropStd[nStdIdx].strName.LoadString (IDS_APROPNAME_SCALEUNITS);
     lpVar = &m_apropStd[nStdIdx].varValue;
     V_VT (lpVar) = VT_BSTR;
-    V_BSTR (lpVar) = SysAllocStringLen (_T(""), 32);
+    V_BSTR (lpVar) = SysAllocStringLen (L"", 32);
     m_apropStd[nStdIdx++].idsTypeInterp = IDS_VTBSTR;
 
     m_apropStd[nStdIdx].dispid = DISPID_AMBIENT_DISPLAYNAME;
     m_apropStd[nStdIdx].strName.LoadString (IDS_APROPNAME_DISPLAYNAME);
     lpVar = &m_apropStd[nStdIdx].varValue;
     V_VT (lpVar) = VT_BSTR;
-    V_BSTR (lpVar) = SysAllocStringLen (_T(""), 32);
+    V_BSTR (lpVar) = SysAllocStringLen (L"", 32);
     m_apropStd[nStdIdx++].idsTypeInterp = IDS_VTBSTR;
 
     m_apropStd[nStdIdx].dispid = DISPID_AMBIENT_LOCALEID;
@@ -525,8 +525,8 @@ BOOL CViewhtmlDoc::SetDefaultAmbientProps()
     V_VT (lpVar) = VT_BSTR;
     CString	temp = ((CViewhtmlApp *) AfxGetApp())->m_tempStorageDir;
     int	sLen = temp.GetLength();	
-    V_BSTR (lpVar) = SysAllocStringLen (
-    			LPCTSTR(((CViewhtmlApp *) AfxGetApp())->m_tempStorageDir), sLen);
+    CStringW wideTemp(temp);
+    V_BSTR (lpVar) = SysAllocStringLen(wideTemp, sLen);
     m_apropNonstd[nNonstdIdx++].idsTypeInterp = IDS_VTBSTR;
 
 	m_nNonstdApropCt = nNonstdIdx;
@@ -687,11 +687,11 @@ HRESULT TFVarCopy (VARIANT * pvarDest, VARIANT * pvarSrc)
     } 
     else 
     {
-	    if ((vt == VT_BSTR) && (_tcslen (V_BSTR (pvarSrc)) == 0)) 
+	    if ((vt == VT_BSTR) && (SysStringLen(V_BSTR(pvarSrc)) == 0))
 	    {
 	        VariantClear (pvarDest);
 	        V_VT (pvarDest) = V_VT (pvarSrc);
-	        V_BSTR (pvarDest) = SysAllocStringLen (_T(""), 32);
+	        V_BSTR (pvarDest) = SysAllocStringLen (L"", 32);
     	} 
     	else 
     	{

@@ -47,9 +47,9 @@ static char BASED_CODE THIS_FILE[] = __FILE__;
 #define new DEBUG_NEW
 
 ///////////////////////////////////////////////////////////////////////////
-// struct BINDINFO
+// struct NCompassBindInfo
 
-BINDINFO::~BINDINFO()
+NCompassBindInfo::~NCompassBindInfo()
 {
     delete [] m_lpParamProps;
 	delete [] m_lpFuncProps;
@@ -344,7 +344,7 @@ void CControlItem::InitBindInfo()
 
 	TRY
 	{
-        m_pBindInfo = new BINDINFO;
+        m_pBindInfo = new NCompassBindInfo;
         ASSERT(m_pBindInfo != NULL);
         m_pCtlDispatch = (LPDISPATCH) GetCtlInterface(IID_IDispatch);
 
@@ -717,7 +717,7 @@ void CControlItem::CopyParams(DISPPARAMS FAR* lpDispparams)
 	            break;
 
 			case VT_BOOL:
-	        	m_LastParams.rgvarg[i].bool = lpDispparams->rgvarg[i].bool;
+	        	m_LastParams.rgvarg[i].boolVal = lpDispparams->rgvarg[i].boolVal;
 	            break;
 	                                                                      
 	        case VT_ERROR:
@@ -761,7 +761,7 @@ void CControlItem::CopyParams(DISPPARAMS FAR* lpDispparams)
 	            break;
 
 			case (VT_BOOL | VT_BYREF):
-	        	m_LastParams.rgvarg[i].pbool = lpDispparams->rgvarg[i].pbool;
+	        	m_LastParams.rgvarg[i].pboolVal = lpDispparams->rgvarg[i].pboolVal;
 	            break;
 	                                                                      
 	        case (VT_ERROR | VT_BYREF):
@@ -850,7 +850,7 @@ BOOL CControlItem::ReadFile()
 	
  	if (m_LastParams.rgvarg[0].vt != VT_BSTR)
 	{
-		NotifyOCX(NULL, FALSE);
+		NotifyOCX(CString(), FALSE);
 		return FALSE;
 	}
 	else
@@ -1386,8 +1386,11 @@ BOOL CControlItem::GetCLSID(CFormatOLEControlItem* item)
 	}
 
 	// If we are here, we should have a m_objCLSID
-	if (StringFromCLSID(m_objCLSID, &m_szObjCLSID)  == S_OK)
+	LPOLESTR clsidString = NULL;
+	if (StringFromCLSID(m_objCLSID, &clsidString) == S_OK)
 	{
+		m_szObjCLSID = clsidString;
+		CoTaskMemFree(clsidString);
 		COleInfo*	objEntry; 
 		if (m_pDoc->m_cntlItemList.Lookup(m_szObjCLSID, (CObject* &) objEntry))
 		{
@@ -1981,7 +1984,7 @@ STDMETHODIMP CControlItem::XEventHandler::GetTypeInfo(unsigned int itinfo,
  
  
 STDMETHODIMP CControlItem::XEventHandler::GetIDsOfNames(REFIID riid,
-      LPTSTR FAR* rgszNames, unsigned int cNames, LCID lcid,
+      LPOLESTR FAR* rgszNames, unsigned int cNames, LCID lcid,
       DISPID FAR* rgdispid)
 {
     METHOD_PROLOGUE(CControlItem, EventHandler)
@@ -2090,7 +2093,7 @@ STDMETHODIMP CControlItem::XAmbientProps::GetTypeInfo(unsigned int itinfo,
  
  
 STDMETHODIMP CControlItem::XAmbientProps::GetIDsOfNames(REFIID riid,
-      LPTSTR FAR* rgszNames, unsigned int cNames, LCID lcid,
+      LPOLESTR FAR* rgszNames, unsigned int cNames, LCID lcid,
       DISPID FAR* rgdispid)
 {
     METHOD_PROLOGUE(CControlItem, AmbientProps)
@@ -2101,7 +2104,7 @@ STDMETHODIMP CControlItem::XAmbientProps::GetIDsOfNames(REFIID riid,
 
     while (nIdx < cNames) 
     {
-        LPAPROP lpAprop = pDoc->FindAprop(rgszNames[nIdx]);
+        LPAPROP lpAprop = pDoc->FindAprop(CString(rgszNames[nIdx]));
         if (lpAprop)
         {
             rgdispid[nIdx] = lpAprop->dispid;
