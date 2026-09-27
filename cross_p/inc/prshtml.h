@@ -373,7 +373,8 @@ private:
 	INT32 m_font_flags;
 
 // current parsing state
-	BOOL m_inside_tag, m_inside_iso_code;
+	BOOL m_inside_tag, m_inside_iso_code, m_inside_script;
+	INT m_script_end_match;
 	CString m_current_tag, m_current_iso_code;
 
 	BOOL m_last_space;

@@ -321,6 +321,8 @@ CParseHTML::CParseHTML( CMimeDynamicLoad *parent )
 
 	m_inside_tag = FALSE;
 	m_inside_iso_code = FALSE;
+	m_inside_script = FALSE;
+	m_script_end_match = 0;
 	m_bPreformatted = 0;
 	m_bInHead = 0;
 	m_bInTitle = 0;
@@ -741,6 +743,53 @@ LOAD_STATE CParseHTML::OnReadData(LPCBYTE buffer, INT32 buffer_size)
 	
 	while(!done)
 		{
+		if (m_inside_script)
+			{
+			static const char script_end[] = "</script";
+
+			while(amount_left > 0 && m_inside_script)
+				{
+				char c = *pbuffer++;
+				amount_left--;
+
+				if (c >= 'A' && c <= 'Z')
+					c += 'a' - 'A';
+
+				if (m_script_end_match < 8)
+					{
+					if (c == script_end[m_script_end_match])
+						m_script_end_match++;
+					else
+						m_script_end_match = (c == '<') ? 1 : 0;
+					}
+				else if (m_script_end_match == 8)
+					{
+					if (c == '>')
+						{
+						m_inside_script = FALSE;
+						m_script_end_match = 0;
+						}
+					else if (c == ' ' || c == '\t' || c == '\r' || c == '\n')
+						m_script_end_match = 9;
+					else
+						m_script_end_match = (c == '<') ? 1 : 0;
+					}
+				else if (c == '>')
+					{
+					m_inside_script = FALSE;
+					m_script_end_match = 0;
+					}
+				}
+
+			if (m_inside_script)
+				{
+				Notify(CHANGEFLAG_ADD_TEXT);
+				return LOAD_STATE_LOADING;
+				}
+
+			continue;
+			}
+
 		// find the beginning of a tag
 		p = (LPCSTR)memchr(pbuffer, '<', amount_left);
 
@@ -805,6 +854,13 @@ got_a_tag:
 		// if we are in the header, then set the flag to ignore subsequent text
  
  		STRING_ID strid = GetStringID(store_name);
+
+		if (store_name == "script")
+			{
+			m_inside_script = TRUE;
+			m_script_end_match = 0;
+			strid = STR_UNKNOWN;
+			}
  		
  		switch(strid)
  			{

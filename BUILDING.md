@@ -55,5 +55,7 @@ allowing asynchronous image loads and Debug assertions to be validated.
 - HTTP and HTTPS use the Windows WinHTTP stack, providing HTTP/1.1, TLS,
   certificate validation, and system proxy support without third-party
   dependencies.
+- Script bodies are ignored because the browser has no JavaScript engine;
+  `noscript` fallback content is rendered.
 - Legacy CRT and Winsock deprecation warnings are suppressed. The remaining
   warnings describe original code behavior and do not prevent the build.
