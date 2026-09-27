@@ -8,6 +8,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ncompass-test", "ncompass-t
 		{0AC0D66A-7202-475C-BCE2-08A9C1CDE1D2} = {0AC0D66A-7202-475C-BCE2-08A9C1CDE1D2}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ncompass-debug", "ncompass-debug.vcxproj", "{C353104B-3975-4564-AEE5-AEDF21FD738D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0AC0D66A-7202-475C-BCE2-08A9C1CDE1D2} = {0AC0D66A-7202-475C-BCE2-08A9C1CDE1D2}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -22,6 +27,10 @@ Global
 		{54C72DC1-575E-4C90-8ADF-AB735D39599D}.Debug|Win32.Build.0 = Debug|Win32
 		{54C72DC1-575E-4C90-8ADF-AB735D39599D}.Release|Win32.ActiveCfg = Release|Win32
 		{54C72DC1-575E-4C90-8ADF-AB735D39599D}.Release|Win32.Build.0 = Release|Win32
+		{C353104B-3975-4564-AEE5-AEDF21FD738D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C353104B-3975-4564-AEE5-AEDF21FD738D}.Debug|Win32.Build.0 = Debug|Win32
+		{C353104B-3975-4564-AEE5-AEDF21FD738D}.Release|Win32.ActiveCfg = Release|Win32
+		{C353104B-3975-4564-AEE5-AEDF21FD738D}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

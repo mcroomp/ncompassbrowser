@@ -45,6 +45,47 @@ on success. An optional third argument changes the timeout in seconds. A fourth
 argument keeps the browser open for that many seconds after the title matches,
 allowing asynchronous image loads and Debug assertions to be validated.
 
+## Automatic crash dumps
+
+`ncompass-debug.exe` is a modern companion tool and is not linked into the
+historical browser. It launches Ncompass under the Windows debugging API and
+writes a minidump plus a text exception summary to the `dumps` directory beside
+the helper if Ncompass has an unhandled exception or displays a Debug assertion.
+
+Run the browser with automatic crash collection:
+
+```powershell
+.\Debug\ncompass-debug.exe https://www.google.com/
+```
+
+For an automated load check, add an expected document-title substring and an
+optional timeout. A fourth argument captures the rendered browser client area
+as a BMP for golden-image or hash comparison:
+
+```powershell
+.\Debug\ncompass-debug.exe https://www.google.com/ Google 60 google.bmp
+```
+
+Verify dump collection without crashing the browser:
+
+```powershell
+.\Debug\ncompass-debug.exe --self-test
+```
+
+Visible modal dialogs owned by Ncompass are recorded as both text and BMP files
+in the same `dumps` directory, then dismissed so automation does not remain
+blocked. Verify dialog capture with:
+
+```powershell
+.\Debug\ncompass-debug.exe --dialog-self-test
+```
+
+Open a captured dump in CDB with:
+
+```powershell
+cdb -z .\Debug\dumps\ncompass-*.dmp
+```
+
 ## Notes
 
 - The project intentionally uses the multibyte character set because the
