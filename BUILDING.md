@@ -86,6 +86,57 @@ Open a captured dump in CDB with:
 cdb -z .\Debug\dumps\ncompass-*.dmp
 ```
 
+## Direct parser testing
+
+`ncompass-parse.exe` is a console test helper that compiles the original
+`readhtml.cpp`, `bigstr.cpp`, `contain.cpp`, and `mutex.cpp` files directly.
+Only MIME notification plumbing and JSON serialization are supplied by the
+test project. The helper therefore exercises the browser's real HTML parser
+without launching its document, layout, or window layers.
+
+Parse a file in deliberately small network-style chunks:
+
+```powershell
+.\Debug\ncompass-parse.exe .\tests\parser\basic.html 1 `
+    http://parser.test/pages/input.html
+```
+
+The output describes the load state, title, plain-text buffer, document
+colors, background image, and typed tag stream as JSON. The optional chunk
+size defaults to 4096 bytes, and the optional base URL is used to resolve
+relative links and images.
+
+Run the deterministic parser regression suite with:
+
+```powershell
+.\tools\test-parser.ps1 -Configuration Debug
+```
+
+The suite feeds each fixture in 1, 2, 7, 31, and 4096-byte chunks. It
+normalizes only adjacent text records with the same formatting because the
+historical streaming parser intentionally emits text records at input-buffer
+boundaries; all other parser output must match.
+
+## Browser layers
+
+The browser keeps the original separation between transport and display:
+
+1. `CDynamicLoad` selects the file or HTTP protocol and marshals asynchronous
+   load notifications.
+2. `CMimeDynamicLoad` dispatches response data to `CParseHTML`, `CGifPicture`,
+   `CJpegPicture`, or another MIME object.
+3. `CParseHTML` consumes arbitrary byte chunks and produces a plain-text
+   buffer plus a typed `CTag` stream.
+4. `CFormatHTML` converts those tags into positioned format items, including
+   text, links, images, headings, lists, and tables.
+5. `CViewhtmlView` draws visible format items through GDI and hosts OLE
+   controls separately.
+6. Image MIME objects decode asynchronously and notify the view to repaint
+   affected regions.
+
+This makes the parser helper a focused test of layer 3. `ncompass-debug.exe`
+continues to provide full-stack browser and rendered-image testing.
+
 ## Notes
 
 - The project intentionally uses the multibyte character set because the
