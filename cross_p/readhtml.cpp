@@ -302,6 +302,11 @@ int strmatch(const char *source, const char *match)
 
 #define numformatcodes (sizeof(formatcodes)/sizeof(formatcodes[0]))		
 
+BOOL IsIsoCodeCharacter(char c, INT32 position)
+	{
+	return isalnum((unsigned char)c) || (position == 1 && c == '#');
+	}
+
 
 CParseHTML::CParseHTML( LPCSTR url, LPCSTR mime_type, BOOL is_plain_text )
 	: CMimeObject( MIME_OBJECT_HTML, url, mime_type )
@@ -323,8 +328,12 @@ CParseHTML::CParseHTML( LPCSTR url, LPCSTR mime_type, BOOL is_plain_text )
 
 	m_inside_tag = FALSE;
 	m_inside_iso_code = FALSE;
-	m_inside_script = FALSE;
-	m_script_end_match = 0;
+	m_inside_raw_text = FALSE;
+	m_raw_text_end_match = 0;
+	m_seen_pref_cr = FALSE;
+	m_seen_pref_lf = FALSE;
+	m_seen_plain_cr = FALSE;
+	m_seen_plain_lf = FALSE;
 	m_bPreformatted = 0;
 	m_bInHead = 0;
 	m_bInTitle = 0;
@@ -358,18 +367,27 @@ void CParseHTML::append_html_text(const char *source, INT32 charcount)
 	if (m_inside_iso_code)
 		{
 		LPCSTR p = (LPCSTR)memchr(source, ';', charcount);
+		INT32 check_length = p ? p - source : charcount;
+
+		for (INT32 i = 0; i < check_length; i++)
+			{
+			if (!IsIsoCodeCharacter(source[i],
+				m_current_iso_code.GetLength() + i))
+				goto bad_iso_code;
+			}
 
 		if (p)
 			{
 			int length = p - source + 1;
 
-			if (length > 10)
+			if (m_current_iso_code.GetLength() + length - 1 > 10)
 				goto bad_iso_code;
 
 			m_current_iso_code += CString(source, length);
 			AppendChar( ParseIsoCode( m_current_iso_code ) );
 			m_current_iso_code.Empty();
 			m_inside_iso_code = FALSE;
+			m_last_space = FALSE;
 			source += length;
 			charcount -= length;
 			}
@@ -378,13 +396,17 @@ void CParseHTML::append_html_text(const char *source, INT32 charcount)
 			if (m_current_iso_code.GetLength() + charcount > 10)
 				{
 bad_iso_code:
+				CString pending = m_current_iso_code.Mid(1);
+				pending += CString(source, charcount);
 				m_inside_iso_code = FALSE;
-				CString t = m_current_iso_code;
 				AppendChar('&');
-
 				m_current_iso_code.Empty();
-				if (t.GetLength() > 0)
-					AppendString(t, t.GetLength() );
+				m_last_space = FALSE;
+				AddFormatTagText(startpos,
+					m_plain_text.GetLength() - startpos, m_font_flags);
+				if (!pending.IsEmpty())
+					append_html_text(pending, pending.GetLength());
+				return;
 				}
 			else
 				{
@@ -412,12 +434,17 @@ bad_iso_code:
 
 			int length;
 
-			if (!p)
+			if (charcount > 1 && !IsIsoCodeCharacter(source[1], 1))
+				{
+				length = 0;
+				AppendChar('&');
+				}
+			else if (!p)
 				{
 				// try to ignore badly formatted HTML with & in it
 				if (charcount > 7)
 					{
-					length = 1;
+					length = 0;
 					AppendChar('&');
 					}
 				else
@@ -433,7 +460,7 @@ bad_iso_code:
 				length = p - source;
 				if (length > 10)
 					{
-					length =1;
+					length = 0;
 					AppendChar('&');
 					}
 				else
@@ -461,20 +488,56 @@ bad_iso_code:
 
 void CParseHTML::append_pref_text(const char *source, INT32 charcount)
 	{
-	BOOL seen_cr = FALSE, seen_lf = FALSE;	
 	INT32 startpos = m_plain_text.GetLength(), textlen = 0;
 
 	if (m_inside_iso_code)
 		{
 		LPCSTR p = (LPCSTR)memchr(source, ';', charcount);
+		INT32 check_length = p ? p - source : charcount;
+
+		for (INT32 i = 0; i < check_length; i++)
+			{
+			if (!IsIsoCodeCharacter(source[i],
+				m_current_iso_code.GetLength() + i))
+				goto bad_pref_iso_code;
+			}
 
 		if (p)
 			{
-			m_current_iso_code += CString(source, p - source + 1);
+			int length = p - source + 1;
+			if (m_current_iso_code.GetLength() + length - 1 > 10)
+				goto bad_pref_iso_code;
+
+			m_current_iso_code += CString(source, length);
 			AppendChar( ParseIsoCode( m_current_iso_code ) );
+			m_current_iso_code.Empty();
+			m_inside_iso_code = FALSE;
+			source += length;
+			charcount -= length;
+			textlen++;
+			m_seen_pref_cr = FALSE;
+			m_seen_pref_lf = FALSE;
 			}
 		else
 			{
+			if (m_current_iso_code.GetLength() + charcount > 10)
+				{
+bad_pref_iso_code:
+				CString pending = m_current_iso_code.Mid(1);
+				pending += CString(source, charcount);
+				m_inside_iso_code = FALSE;
+				AppendChar('&');
+				m_current_iso_code.Empty();
+				m_seen_pref_cr = FALSE;
+				m_seen_pref_lf = FALSE;
+				AddFormatTagText(startpos,
+					m_plain_text.GetLength() - startpos,
+					m_font_flags|FONTFLAG_NO_WRAP);
+				if (!pending.IsEmpty())
+					append_pref_text(pending, pending.GetLength());
+				return;
+				}
+
 			m_current_iso_code += CString(source, charcount);
 			return;
 			}
@@ -484,29 +547,29 @@ void CParseHTML::append_pref_text(const char *source, INT32 charcount)
 		{
 		if (*source == '\r')
 			{
-			if (seen_lf == FALSE)
+			if (m_seen_pref_lf == FALSE)
 				{
 				AddFormatTagText(startpos, textlen, m_font_flags|FONTFLAG_NO_WRAP);
 				startpos = m_plain_text.GetLength(); textlen = 0;
 				AddFormatTag(TAG_NEWLINE_HARD_BREAK);
-				seen_cr = TRUE;
+				m_seen_pref_cr = TRUE;
 				}
 			}
 		else if (*source == '\n')
 			{
-			if (seen_cr == FALSE)
+			if (m_seen_pref_cr == FALSE)
 				{
 				AddFormatTagText(startpos, textlen, m_font_flags|FONTFLAG_NO_WRAP);
 				startpos = m_plain_text.GetLength(); textlen = 0;
 				AddFormatTag(TAG_NEWLINE_HARD_BREAK);
-				seen_lf = TRUE;
+				m_seen_pref_lf = TRUE;
 				}
 			}
 		else if (*source == '\t')
 			{
 			AppendString("    ",4);
-			seen_cr = FALSE;
-			seen_lf = FALSE;
+			m_seen_pref_cr = FALSE;
+			m_seen_pref_lf = FALSE;
 			textlen+=4;
 			}
 		else if (*source == '&')
@@ -515,29 +578,50 @@ void CParseHTML::append_pref_text(const char *source, INT32 charcount)
 		
 			LPCSTR p = (LPCSTR)memchr(source, ';', charcount);
 
-			if (!p)
+			if (charcount > 1 && !IsIsoCodeCharacter(source[1], 1))
 				{
-				m_inside_iso_code = TRUE;
-				m_current_iso_code = CString(source, charcount);
-				AddFormatTagText(startpos, m_plain_text.GetLength() - startpos, m_font_flags|FONTFLAG_NO_WRAP); 
-				return;
+				AppendChar('&');
+				textlen++;
+				m_seen_pref_cr = FALSE;
+				m_seen_pref_lf = FALSE;
 				}
-			
-			int length = p - source;
+			else if (!p)
+				{
+				if (charcount > 10)
+					{
+					AppendChar('&');
+					textlen++;
+					m_seen_pref_cr = FALSE;
+					m_seen_pref_lf = FALSE;
+					}
+				else
+					{
+					m_inside_iso_code = TRUE;
+					m_current_iso_code = CString(source, charcount);
+					AddFormatTagText(startpos,
+						m_plain_text.GetLength() - startpos,
+						m_font_flags|FONTFLAG_NO_WRAP);
+					return;
+					}
+				}
+			else
+				{
+				int length = p - source;
 
-			AppendChar( ParseIsoCode( source ) );
-			
-			source += length;
-			charcount -= length;
-			textlen++;
-			seen_cr = FALSE;
-			seen_lf = FALSE;
+				AppendChar( ParseIsoCode( source ) );
+
+				source += length;
+				charcount -= length;
+				textlen++;
+				m_seen_pref_cr = FALSE;
+				m_seen_pref_lf = FALSE;
+				}
 			}
 		else
 			{
 			AppendChar(*source);
-			seen_cr = FALSE;
-			seen_lf = FALSE;
+			m_seen_pref_cr = FALSE;
+			m_seen_pref_lf = FALSE;
 			textlen++;
 			}
 		source++;
@@ -549,43 +633,42 @@ void CParseHTML::append_pref_text(const char *source, INT32 charcount)
 
 void CParseHTML::append_plain_text(const char *source, INT32 charcount)
 	{
-	BOOL seen_cr = FALSE, seen_lf = FALSE;	
 	INT32 startpos = m_plain_text.GetLength(), textlen = 0;
 
 	while(charcount > 0)
 		{
 		if (*source == '\r')
 			{
-			if (seen_lf == FALSE)
+			if (m_seen_plain_lf == FALSE)
 				{
 				AddFormatTagText(startpos, textlen, 3|FONTFLAG_NO_WRAP|FONTFLAG_FIXED);
 				startpos = m_plain_text.GetLength(); textlen = 0;
 				AddFormatTag(TAG_NEWLINE_HARD_BREAK);
-				seen_cr = TRUE;
+				m_seen_plain_cr = TRUE;
 				}
 			}
 		else if (*source == '\n')
 			{
-			if (seen_cr == FALSE)
+			if (m_seen_plain_cr == FALSE)
 				{
 				AddFormatTagText(startpos, textlen, 3|FONTFLAG_NO_WRAP|FONTFLAG_FIXED);
 				startpos = m_plain_text.GetLength(); textlen = 0;
 				AddFormatTag(TAG_NEWLINE_HARD_BREAK);
-				seen_lf = TRUE;
+				m_seen_plain_lf = TRUE;
 				}
 			}
 		else if (*source == '\t')
 			{
 			AppendString("    ",4);
-			seen_cr = FALSE;
-			seen_lf = FALSE;
+			m_seen_plain_cr = FALSE;
+			m_seen_plain_lf = FALSE;
 			textlen+=4;
 			}
 		else
 			{
 			AppendChar(*source);
-			seen_cr = FALSE;
-			seen_lf = FALSE;
+			m_seen_plain_cr = FALSE;
+			m_seen_plain_lf = FALSE;
 			textlen++;
 			}
 		source++;
@@ -612,15 +695,27 @@ char ParseIsoCode( const char *source )
 
 	if (*source == '#')
 		{
-		// we have a numeric code
 		source++;
-		int number = 0;
-		while( isdigit( (unsigned char)*source ) )
+		int base = 10;
+		if (*source == 'x' || *source == 'X')
 			{
-			number = number * 10 + (*source - '0' );
+			base = 16;
 			source++;
 			}
-		return (char)number;
+
+		int number = 0;
+		while (isdigit((unsigned char)*source) ||
+			(base == 16 && strchr("ABCDEFabcdef", *source)))
+			{
+			int digit;
+			if (isdigit((unsigned char)*source))
+				digit = *source - '0';
+			else
+				digit = toupper((unsigned char)*source) - 'A' + 10;
+			number = number * base + digit;
+			source++;
+			}
+		return number > 0 && number <= 255 ? (char)number : '?';
 		}
 	else
 		{
@@ -801,11 +896,11 @@ LOAD_STATE CParseHTML::OnReadData(LPCBYTE buffer, INT32 buffer_size)
 	
 	while(!done)
 		{
-		if (m_inside_script)
+		if (m_inside_raw_text)
 			{
-			static const char script_end[] = "</script";
+			const int raw_text_end_length = m_raw_text_end.GetLength();
 
-			while(amount_left > 0 && m_inside_script)
+			while(amount_left > 0 && m_inside_raw_text)
 				{
 				char c = *pbuffer++;
 				amount_left--;
@@ -813,33 +908,33 @@ LOAD_STATE CParseHTML::OnReadData(LPCBYTE buffer, INT32 buffer_size)
 				if (c >= 'A' && c <= 'Z')
 					c += 'a' - 'A';
 
-				if (m_script_end_match < 8)
+				if (m_raw_text_end_match < raw_text_end_length)
 					{
-					if (c == script_end[m_script_end_match])
-						m_script_end_match++;
+					if (c == m_raw_text_end[m_raw_text_end_match])
+						m_raw_text_end_match++;
 					else
-						m_script_end_match = (c == '<') ? 1 : 0;
+						m_raw_text_end_match = (c == '<') ? 1 : 0;
 					}
-				else if (m_script_end_match == 8)
+				else if (m_raw_text_end_match == raw_text_end_length)
 					{
 					if (c == '>')
 						{
-						m_inside_script = FALSE;
-						m_script_end_match = 0;
+						m_inside_raw_text = FALSE;
+						m_raw_text_end_match = 0;
 						}
 					else if (c == ' ' || c == '\t' || c == '\r' || c == '\n')
-						m_script_end_match = 9;
+						m_raw_text_end_match = raw_text_end_length + 1;
 					else
-						m_script_end_match = (c == '<') ? 1 : 0;
+						m_raw_text_end_match = (c == '<') ? 1 : 0;
 					}
 				else if (c == '>')
 					{
-					m_inside_script = FALSE;
-					m_script_end_match = 0;
+					m_inside_raw_text = FALSE;
+					m_raw_text_end_match = 0;
 					}
 				}
 
-			if (m_inside_script)
+			if (m_inside_raw_text)
 				{
 				Notify(CHANGEFLAG_ADD_TEXT);
 				return LOAD_STATE_LOADING;
@@ -912,10 +1007,11 @@ got_a_tag:
  
  		STRING_ID strid = GetStringID(store_name);
 
-		if (store_name == "script")
+		if (store_name == "script" || store_name == "style")
 			{
-			m_inside_script = TRUE;
-			m_script_end_match = 0;
+			m_inside_raw_text = TRUE;
+			m_raw_text_end = "</" + store_name;
+			m_raw_text_end_match = 0;
 			strid = STR_UNKNOWN;
 			}
  		

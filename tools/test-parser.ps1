@@ -78,8 +78,21 @@ $scriptResult = & $parser `
     "http://parser.test/pages/input.html" | ConvertFrom-Json
 
 if ($scriptResult.plainText -notmatch "Fallback content" -or
-    $scriptResult.plainText -match "Script must not render") {
-    throw "script/noscript behavior is incorrect"
+    $scriptResult.plainText -match "Script must not render" -or
+    $scriptResult.plainText -match "style-must-not-render") {
+    throw "script/style/noscript behavior is incorrect"
 }
 
-Write-Host "PASS: script content ignored and noscript fallback parsed"
+Write-Host "PASS: script and style content ignored and noscript fallback parsed"
+
+$entityResult = & $parser `
+    (Join-Path $fixtures "entities.html") 1 `
+    "http://parser.test/pages/input.html" | ConvertFrom-Json
+
+if ($entityResult.plainText -notmatch "Named: one&two" -or
+    $entityResult.plainText -notmatch "Numeric: ABC. Hex: AB." -or
+    $entityResult.plainText -notmatch "Apps & Games; Arts, Crafts & Sewing") {
+    throw "entity decoding is incorrect"
+}
+
+Write-Host "PASS: named, decimal, hexadecimal, and literal entities parsed"

@@ -50,7 +50,10 @@ allowing asynchronous image loads and Debug assertions to be validated.
 `ncompass-debug.exe` is a modern companion tool and is not linked into the
 historical browser. It launches Ncompass under the Windows debugging API and
 writes a minidump plus a text exception summary to the `dumps` directory beside
-the helper if Ncompass has an unhandled exception or displays a Debug assertion.
+the helper if Ncompass has an unhandled exception or triggers a Debug assertion.
+Debug assertions are converted to non-continuable exceptions at startup instead
+of displaying the interactive CRT assertion dialog, so unattended tests fail
+immediately and the helper can collect the failing stack.
 
 Run the browser with automatic crash collection:
 

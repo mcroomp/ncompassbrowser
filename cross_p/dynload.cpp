@@ -39,6 +39,7 @@ CNotifyObject::~CNotifyObject()
 		{
 		CDynamicLoad *dlobject = GetNextDynamicLoad(walk);
 
+		dlobject->AbortLoading();
 		delete dlobject;
 		}
 	}
@@ -234,7 +235,9 @@ void CDynamicLoad::StartLoading()
 
 void CDynamicLoad::AbortLoading()
 	{
-	ASSERT(m_current_list != LIST_NONE);
+	if (m_current_list == LIST_NONE || m_current_list == LIST_DONE ||
+		m_current_list == LIST_DONE_NOTIFY)
+		return;
 
 	if (m_current_list == LIST_NEW)
 		{

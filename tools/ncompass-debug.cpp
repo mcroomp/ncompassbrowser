@@ -523,6 +523,15 @@ int MonitorProcess(const std::wstring& application,
 			{
 			timed_out = true;
 			std::wcerr << L"Timed out waiting for the process\n";
+			if (browser_window && !screenshot_path.empty() &&
+				!screenshot_written)
+				{
+				screenshot_written =
+					CaptureWindowBitmap(browser_window, screenshot_path);
+				if (screenshot_written)
+					std::wcout << L"Timeout screenshot: "
+						<< screenshot_path << L"\n";
+				}
 			if (browser_window)
 				PostMessageW(browser_window, WM_CLOSE, 0, 0);
 			TerminateProcess(process.hProcess, 2);
