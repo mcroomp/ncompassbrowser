@@ -29,14 +29,16 @@ The executable is written to `Release\ncompass.exe` (or
 Open a URL directly from the command line with:
 
 ```powershell
-.\Release\ncompass.exe http://127.0.0.1:8766/
+.\Release\ncompass-job.exe -- `
+    .\Release\ncompass.exe http://127.0.0.1:8766/
 ```
 
 For an automated end-to-end loading test, provide a URL and an expected
 document-title substring:
 
 ```powershell
-.\Release\ncompass-test.exe http://127.0.0.1:8766/ "Welcome to NCompass"
+.\Release\ncompass-job.exe -- `
+    .\Release\ncompass-test.exe http://127.0.0.1:8766/ "Welcome to NCompass"
 ```
 
 The test executable launches the real browser, waits up to 15 seconds for the
@@ -58,7 +60,8 @@ immediately and the helper can collect the failing stack.
 Run the browser with automatic crash collection:
 
 ```powershell
-.\Debug\ncompass-debug.exe https://www.google.com/
+.\Debug\ncompass-job.exe -- `
+    .\Debug\ncompass-debug.exe https://www.google.com/
 ```
 
 For an automated load check, add an expected document-title substring and an
@@ -66,13 +69,14 @@ optional timeout. A fourth argument captures the rendered browser client area
 as a BMP for golden-image or hash comparison:
 
 ```powershell
-.\Debug\ncompass-debug.exe https://www.google.com/ Google 60 google.bmp
+.\Debug\ncompass-job.exe -- `
+    .\Debug\ncompass-debug.exe https://www.google.com/ Google 60 google.bmp
 ```
 
 Verify dump collection without crashing the browser:
 
 ```powershell
-.\Debug\ncompass-debug.exe --self-test
+.\Debug\ncompass-job.exe -- .\Debug\ncompass-debug.exe --self-test
 ```
 
 Visible modal dialogs owned by Ncompass are recorded as both text and BMP files
@@ -80,13 +84,44 @@ in the same `dumps` directory, then dismissed so automation does not remain
 blocked. Verify dialog capture with:
 
 ```powershell
-.\Debug\ncompass-debug.exe --dialog-self-test
+.\Debug\ncompass-job.exe -- .\Debug\ncompass-debug.exe --dialog-self-test
 ```
 
 Open a captured dump in CDB with:
 
 ```powershell
 cdb -z .\Debug\dumps\ncompass-*.dmp
+```
+
+## Process cleanup
+
+`ncompass-job.exe` is a generic process wrapper for test and debugging tools.
+It creates a Windows job object with `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`,
+starts the requested command suspended, assigns it to the job, and then resumes
+it. Every descendant remains in that job, including Ncompass processes launched
+by `ncompass-test.exe` or `ncompass-debug.exe` and debuggees launched by CDB.
+Closing or terminating the wrapper therefore removes the complete process tree.
+
+Run CDB and its Ncompass debuggee inside one job:
+
+```powershell
+.\Debug\ncompass-job.exe -- `
+    cdb -o -g -G .\Debug\ncompass.exe https://www.amazon.com/
+```
+
+Run a local fixture server inside a job:
+
+```powershell
+.\Debug\ncompass-job.exe -- `
+    python -m http.server 8766 --bind 127.0.0.1 `
+    --directory .\tests\parser
+```
+
+The wrapper also accepts `--cwd directory` before the command. Run its cleanup
+regression with:
+
+```powershell
+.\tools\test-job.ps1 -Configuration Debug
 ```
 
 ## Direct parser testing
