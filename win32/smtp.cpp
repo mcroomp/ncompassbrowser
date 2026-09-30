@@ -168,9 +168,17 @@ CMimeSMTP::CMimeSMTP(LPCSTR url, LPCSTR mime_type)
 	{}
 	
 LOAD_STATE CMimeSMTP::OnReadData(LPCBYTE buffer, INT32 buffer_size)
-	{ return LOAD_STATE_LOADING; }
+	{
+	ASSERT_WORKER_THREAD();
+
+	return LOAD_STATE_LOADING;
+	}
 LOAD_STATE CMimeSMTP::OnEndOfFile()
-	{ return LOAD_STATE_ABORTED; }			// always return aborted to prevent caching of mail
+	{
+	ASSERT_WORKER_THREAD();
+
+	return LOAD_STATE_ABORTED;			// always return aborted to prevent caching of mail
+	}
 
 BOOL CMimeSMTP::UsesInternalViewer() const
 	{ return FALSE; }

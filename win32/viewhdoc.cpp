@@ -213,6 +213,8 @@ CMimeObject * CViewhtmlDoc::GetMimeObject() const
 
 void CViewhtmlDoc::OnNotify( UINT32 change_flags, CDynamicLoad *source )
 	{
+	ASSERT_UI_THREAD();
+
 	// notify all views of the change
 
 	if (source == m_loading_mime_object )

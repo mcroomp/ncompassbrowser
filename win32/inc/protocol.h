@@ -75,5 +75,26 @@ private:
 	HANDLE m_thread_done_semaphore;
 
 	friend UINT HTTPWorkerThread( LPVOID lparam );
-	friend UINT WinHTTPWorkerThread( LPVOID lparam );
+	friend UINT WinInetWorkerThread( LPVOID lparam );
+	};
+
+// Used for a URL scheme the loader doesn't recognize, and for a load that is
+// cancelled before a real protocol was ever created (still waiting for a
+// free connection slot). Rather than the dynamic loader calling OnEndLoading
+// directly, this still runs it on a genuine worker thread, matching every
+// other protocol so the loader's thread-affinity contract never has a
+// special case.
+class CProtocolUnknown : public CProtocol
+	{
+public:
+	CProtocolUnknown(CDynamicLoad *load_object);
+	~CProtocolUnknown();
+
+	virtual void BeginLoadThread();
+	virtual void AbortLoadThread();
+	virtual void WaitEndLoadThread();
+private:
+	HANDLE m_thread_done_semaphore;
+
+	friend UINT UnknownProtocolWorkerThread( LPVOID lparam );
 	};

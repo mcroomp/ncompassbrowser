@@ -12,6 +12,23 @@
 #define DEBUG_LOCK() Lock()
 #endif
 
+// Records which thread owns the UI (document/view/parser/format) side of the
+// browser, and dies immediately (via the same ASSERT->non-continuable
+// exception path as ASSERT_LOCKED) if a function meant for one side of the
+// thread model is reached from the other. Call SetUIThreadID() once, from
+// CViewhtmlApp::InitInstance, before any dynamic loading can occur.
+
+#ifdef _DEBUG
+void SetUIThreadID();
+void AssertUIThread();
+void AssertWorkerThread();
+#define ASSERT_UI_THREAD() AssertUIThread()
+#define ASSERT_WORKER_THREAD() AssertWorkerThread()
+#else
+#define ASSERT_UI_THREAD()
+#define ASSERT_WORKER_THREAD()
+#endif
+
 class CAccessLock
 	{
 public:

@@ -66,3 +66,30 @@ void CAccessLock::AssertLocked() const
 	}
 
 #endif
+
+///////////////////////////////////////////////
+// thread model boundary assertions
+///////////////////////////////////////////////
+
+#ifdef _DEBUG
+
+static DWORD g_ui_thread_id = 0;
+
+void SetUIThreadID()
+	{
+	g_ui_thread_id = GetCurrentThreadId();
+	}
+
+void AssertUIThread()
+	{
+	// a thread ID of 0 means SetUIThreadID() hasn't run yet (e.g. a static
+	// constructor); don't fail assertions before the app has started up
+	ASSERT(g_ui_thread_id == 0 || GetCurrentThreadId() == g_ui_thread_id);
+	}
+
+void AssertWorkerThread()
+	{
+	ASSERT(g_ui_thread_id == 0 || GetCurrentThreadId() != g_ui_thread_id);
+	}
+
+#endif

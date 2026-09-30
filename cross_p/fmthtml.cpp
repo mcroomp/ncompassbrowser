@@ -1690,6 +1690,7 @@ CFormatHTML::~CFormatHTML()
 
 void CFormatHTML::Format( CMimeObject *mime_object, FORMAT_PARAMS& fp)
 	{
+	ASSERT_UI_THREAD();
 
 #ifdef _WINDOWS
 	m_pDC = fp.m_pDC;

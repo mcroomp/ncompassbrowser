@@ -186,17 +186,22 @@ void CDynamicLoad::InvokeLoadingThread()
 		}
 	else
 		{
+		m_current_list = LIST_LOADING;
+		m_list_position = g_loading_list.AddTail( this );
+
 		DEBUG_LOCK();
 		SetErrorMessage(IDS_URL_TYPE_UNKNOWN, m_url );
-
-		OnEndLoading();
-		Notify(CHANGEFLAG_DONE);
-		Unlock();
-		
 		m_load_state = LOAD_STATE_ABORTED;
+		Unlock();
 
-		m_current_list = LIST_DONE_NOTIFY;
-		m_list_position = g_done_notify_list.AddTail(this);
+		g_current_walk = NULL; // restart walking the notify list
+
+		// no real protocol applies to an unrecognized URL scheme, but a
+		// worker thread still calls OnEndLoading and signals CHANGEFLAG_DONE
+		// exactly like every other protocol, so DoNotifies can reap this
+		// object identically regardless of scheme
+		m_loading_protocol = new CProtocolUnknown(this);
+		m_loading_protocol->BeginLoadThread();
 		}
 	}
 
@@ -244,20 +249,27 @@ void CDynamicLoad::AbortLoading()
 		ASSERT( g_new_list.Find(this) == m_list_position);
 		g_new_list.RemoveAt( m_list_position );
 
+		DEBUG_LOCK();
+		m_load_state = LOAD_STATE_ABORTED;
+		Unlock();
+
+		// never had a real protocol (still queued waiting for a free
+		// connection slot), but OnEndLoading still runs on a worker thread,
+		// exactly like every other cancellation path
+		CProtocol *abort_protocol = new CProtocolUnknown(this);
+		abort_protocol->BeginLoadThread();
+		abort_protocol->AbortLoadThread();
+		delete abort_protocol;
+
 		m_current_list = LIST_DONE_NOTIFY;
 		m_list_position = g_done_notify_list.AddTail(this);
-		
-		m_load_state = LOAD_STATE_ABORTED;
-		
-		OnEndLoading();
-
-		DEBUG_LOCK();
-		Notify(CHANGEFLAG_DONE);
-		Unlock();
 		}
 	else if (m_current_list == LIST_LOADING)
 		{
 		m_loading_protocol->AbortLoadThread();
+			// AbortLoadThread() blocks until the worker thread itself has
+			// called OnEndLoading() and Notify(CHANGEFLAG_DONE), exactly as
+			// it would for a normal completion, so neither is called here
 		delete m_loading_protocol;
 		m_loading_protocol = NULL;
 
@@ -267,16 +279,8 @@ void CDynamicLoad::AbortLoading()
 
 		m_current_list = LIST_DONE_NOTIFY;
 		m_list_position = g_done_notify_list.AddTail(this);
-		
-		m_load_state = LOAD_STATE_ABORTED;
-
-		OnEndLoading();
 
 		g_current_walk = NULL; // restart walking the notify list
-		
-		DEBUG_LOCK();
-		Notify(CHANGEFLAG_DONE);
-		Unlock();
 
 		// check to see if anyone is waiting to load, and let them load
 		while(g_loading_list.GetCount() < theApp.m_max_connections && g_new_list.GetCount() > 0)
@@ -304,13 +308,16 @@ void CDynamicLoad::Notify(UINT32 flags)
 
 CString CDynamicLoad::DoNotifies()
 	{
+	ASSERT_UI_THREAD();
+
 	CString message;
 
 
-	POSITION walk = g_loading_list.GetHeadPosition();
-	while(walk)
+	g_current_walk = g_loading_list.GetHeadPosition();
+	while(g_current_walk)
 		{
-		CDynamicLoad *dlobject = (CDynamicLoad *)g_loading_list.GetNext(walk);
+		CDynamicLoad *dlobject =
+			(CDynamicLoad *)g_loading_list.GetNext(g_current_walk);
 
 		dlobject->DEBUG_LOCK();
 
@@ -386,10 +393,11 @@ done_loading:
 		}
 
 	// Take everything from the aborted list, do a notify, and send it immediately to the done list
-	walk = g_done_notify_list.GetHeadPosition();
-	while(walk)
+	g_current_walk = NULL;
+	while(!g_done_notify_list.IsEmpty())
 		{
-		CDynamicLoad *dlobject = (CDynamicLoad *)g_done_notify_list.GetNext(walk);
+		CDynamicLoad *dlobject =
+			(CDynamicLoad *)g_done_notify_list.GetHead();
 
 		dlobject->DEBUG_LOCK();
 
@@ -453,11 +461,15 @@ void CDynamicLoad::AssertLocked() const
 // default implementations for objects that don't care about mime types and the kind of stuff
 LOAD_STATE CDynamicLoad::OnPreLoading()
 	{
+	ASSERT_UI_THREAD();
+
 	return LOAD_STATE_LOADING;
 	}
 
 LOAD_STATE CDynamicLoad::OnBeginLoading( const CMapStringToString& mime_header )
 	{
+	ASSERT_WORKER_THREAD();
+
 	return LOAD_STATE_LOADING;
 	}
 	

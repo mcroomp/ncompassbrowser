@@ -100,6 +100,7 @@ BOOL CViewhtmlApp::InitInstance()
 {
 #ifdef _DEBUG
 	_CrtSetReportHook(CrashOnAssertion);
+	SetUIThreadID();
 #endif
 
 	SetRegistryKey("ExCITE");

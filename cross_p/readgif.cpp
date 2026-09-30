@@ -281,6 +281,8 @@ static const UINT code_mask[13] = { 0,
 
 LOAD_STATE CGifPicture::OnReadData(LPCBYTE buffer, INT32 buffer_size)
 	{
+	ASSERT_WORKER_THREAD();
+
 	UINT i,ilen,j;
 	BYTE *p;
 	DECODE_STRUCT& ds = *m_decode_struct;
@@ -739,6 +741,8 @@ exit:
 
 LOAD_STATE CGifPicture::OnEndOfFile()
 	{
+	ASSERT_WORKER_THREAD();
+
 	DEBUG_LOCK();
 	LOAD_STATE l = GetLoadState();
 	Unlock();

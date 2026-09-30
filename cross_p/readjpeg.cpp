@@ -283,6 +283,10 @@ void jpeg_setup_source (j_decompress_ptr cinfo, DECODE_STRUCT *ds)
   	src->pub.resync_to_restart = jpeg_resync_to_restart; /* use default method */
   	src->pub.term_source = term_source;
   	src->decode = ds;
+	src->start_of_file = TRUE;
+	src->current_position = 0;
+	src->buffer = NULL;
+	src->buffer_size = 0;
   	src->pub.bytes_in_buffer = 0; /* forces fill_input_buffer on first read */
   	src->pub.next_input_byte = NULL; /* until buffer loaded */
 	}
@@ -427,6 +431,7 @@ void CJpegPicture::out_line( INT32 scan_line )
 
 LOAD_STATE CJpegPicture::OnReadData(LPCBYTE buffer, INT32 buffer_size)
 	{
+	ASSERT_WORKER_THREAD();
 	ASSERT(m_decode);
 
 	m_decode->m_file_buffer.AppendData(buffer, buffer_size);
@@ -491,6 +496,8 @@ LOAD_STATE CJpegPicture::OnReadData(LPCBYTE buffer, INT32 buffer_size)
 
 LOAD_STATE CJpegPicture::OnEndOfFile()
 	{
+	ASSERT_WORKER_THREAD();
+
 	DEBUG_LOCK();
 	LOAD_STATE l = GetLoadState();
 	Unlock();
@@ -512,7 +519,10 @@ LOAD_STATE CJpegPicture::OnEndOfFile()
 
 		my_src_ptr src = (my_src_ptr) m_decode->m_cinfo.src;
 		if (src->buffer)
+			{
 			delete [] src->buffer;
+			src->buffer = NULL;
+			}
 
  		jpeg_destroy_decompress(&m_decode->m_cinfo);
 

@@ -847,6 +847,8 @@ STRING_ID GetStringID(const char *tagname)
 
 LOAD_STATE CParseHTML::OnReadData(LPCBYTE buffer, INT32 buffer_size)
 	{
+	ASSERT_WORKER_THREAD();
+
 	LPCSTR pbuffer = (LPCSTR)buffer;
 	LPCSTR tagend,p;
 
@@ -1951,6 +1953,8 @@ void CParseHTML::BeginTableRow( const CPtrList& attrib_list )
 
 LOAD_STATE CParseHTML::OnEndOfFile()
 	{
+	ASSERT_WORKER_THREAD();
+
 	AddFormatTag( TAG_NEWLINE );
 	
 	Notify(CHANGEFLAG_DONE);
@@ -1979,7 +1983,11 @@ LOAD_STATE CParseHTML::OnEndOfFile()
 CTagOLEControl::CTagOLEControl(ALIGN_TYPE align, const char *url, INT32 width, INT32 height, INT32 hspace, INT32 vspace, const CLSID& clsid, LPCSTR ocx_url, LPCSTR version)
 	 : CTag(TAG_OLECONTROL)
 	{ 
-static INT32 parse_id = 0; 
+#ifdef _WINDOWS
+static LONG parse_id = 0;
+#else
+static INT32 parse_id = 0;
+#endif
 
 	m_align = align; 
 	m_url = url; 
@@ -1987,7 +1995,11 @@ static INT32 parse_id = 0;
 	m_vspace = vspace; 
 	m_height = height; 
 	m_width = width; 
+#ifdef _WINDOWS
+	m_parse_id = InterlockedIncrement(&parse_id) - 1;
+#else
 	m_parse_id = parse_id++;
+#endif
 	m_clsid = clsid;
 	m_ocx_url = ocx_url;
 	m_version = version;
