@@ -6,10 +6,12 @@
 > ~30 years of browser security work. Treat it the same way you'd treat any
 > other unpatched 1995 Windows binary.
 
-Ncompass began as a research prototype at Simon Fraser University's
+The NCompass browser began as a research prototype at Simon Fraser University's
 **ExCITE lab** — a name still visible in the code today, since the
 browser's own settings are stored under the registry key
-`Software\ExCITE\Ncompass`. The lab had first looked at licensing NCSA
+`Software\ExCITE\Ncompass`, and its hardcoded default home page,
+`http://oberon.educ.sfu.ca/NCompass/intro.htm`, points at "oberon," an SFU
+Faculty of Education server. The lab had first looked at licensing NCSA
 Mosaic to build on, but it was too expensive; it happened to already have
 an HTML viewer written for the Macintosh for a different project, so that
 renderer (`cross_p/`, [Original authors](#original-authors) below) was
