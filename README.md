@@ -180,6 +180,70 @@ See [BUILDING.md](BUILDING.md) for full instructions, including:
   testing without any UI.
 - The PowerShell regression scripts under `testing/`.
 
+## How `<xolecontrol>` worked, before there was a standard
+
+Ncompass predates the `<OBJECT>` tag that Microsoft and the W3C would later
+standardize for embedding ActiveX controls (and everything else) in HTML.
+Its own tag for this, `<xolecontrol>` (`STR_OLECONTROL` in
+[cross_p/readhtml.cpp](cross_p/readhtml.cpp)), is a much more ad hoc affair
+— it shares its attribute parsing with `<img>` and has no concept of the
+`<PARAM>` child tags `<OBJECT>` would later use for properties:
+
+```html
+<xolecontrol clsid="{8856F961-340A-11D0-A96B-00C04FD705A2}"
+              src="control.state" olesrc="control.ocx" version="1.0"
+              width="400" height="300">
+```
+
+- **`clsid`** — the control's COM class ID, parsed with `IIDFromString`
+  (braces required).
+- **`src`** — a URL to a *state file*: not the control's binary, but a
+  small container-specific format holding the control's already
+  initialized/persisted properties (see below). This is what
+  `hello.olestate` is in the demo below.
+- **`olesrc`** — a URL to the actual OCX *binary*, fetched and
+  self-registered only if the control isn't already installed locally —
+  conceptually similar to what `<OBJECT CODEBASE=...>` would standardize on
+  a bit later, just under a different name and mechanism.
+- **`version`** — parsed but, in the surviving code, not deeply used beyond
+  `olesrc` downloads.
+
+When the page is parsed, `CControlItem::CheckAndInsertObject()`
+(`win32/cntlitem.cpp`) drives the whole thing:
+
+1. **`ReportIfLocalOCX()` / `CheckIfLocalOCX()`** enumerate every CLSID
+   registered under `HKEY_CLASSES_ROOT\CLSID`, looking for a `Control`
+   subkey and an `InprocServer32` path matching `clsid`. If found, it reads
+   the *installed* DLL's real `ProductVersion` resource string and compares
+   it byte-for-byte against a version string recorded in the `src` state
+   file. Only an **exact string match** counts as "the right control is
+   already here."
+2. If the control isn't installed, or the version string doesn't match,
+   the browser instead fetches the binary from **`olesrc`**, calls
+   `DllRegisterServer` on it via `LoadLibrary`/`GetProcAddress` (the
+   OCX self-registers itself, just like installing one manually would),
+   and retries.
+3. Once a matching control is confirmed installed, `src`'s state file is
+   read via `CControlItem::OpenStorage()`. Its format is a small
+   MFC-`CArchive`-serialized header (ten `CString`s: browser version,
+   company name, file description/version, internal name, copyright,
+   trademarks, original filename, product name/version) followed by the
+   raw bytes of a genuine OLE compound-file (`IStorage`/`ILockBytes`)
+   image — the control's own previously-`IPersistStorage::Save()`d state.
+   `::OleLoad()` on that image is what finally instantiates and
+   initializes the real COM object.
+4. `DoVerb(OLEIVERB_SHOW, ...)` in-place-activates it into the page, at
+   which point it's a real child window (or, in principle, a windowless
+   view) painting itself and receiving input — same as any OLE container.
+
+There's no equivalent of `<OBJECT>`'s `<PARAM NAME=... VALUE=...>` pairs at
+all: every property a control needs is baked into that one opaque,
+already-serialized state blob rather than passed as individual page-level
+values, so authoring a page with a *new* control's properties meant first
+running it somewhere else to generate that blob, not just typing
+attributes into HTML. See [Hello OLE control demo](#hello-ole-control-demo)
+below for exactly this format, generated and loaded end to end.
+
 ## Hello OLE control demo
 
 ![HelloOleControl.dll rendering inside the restored browser](hello-ole-control/screenshot.png)
@@ -202,6 +266,7 @@ persisted-storage path — the same `CControlItem::OpenStorage` /
 (`tests/parser/hello-ole-control-demo.html`). The `.olestate` file is a
 real OLE compound-file, generated with
 `ncompass-debug.exe --make-ole-state`.
+
 
 To build and try it yourself:
 
