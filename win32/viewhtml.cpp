@@ -5,6 +5,9 @@
 #include "afxpriv.h"		// For CRecentFileList
 
 #include <direct.h>
+#ifdef _DEBUG
+#include <crtdbg.h>
+#endif
 
 #include "viewhtml.h"
 #include "mainfrm.h"
@@ -31,6 +34,15 @@ static char BASED_CODE THIS_FILE[] = __FILE__;
 #endif
 
 #define BOOKMARK_FILENAME "bookmark.dat"
+
+#ifdef _DEBUG
+static int __cdecl CrashOnAssertion(int report_type, char *, int *)
+	{
+	if (report_type == _CRT_ASSERT)
+		RaiseException(0xE0421000, EXCEPTION_NONCONTINUABLE, 0, NULL);
+	return FALSE;
+	}
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 // CViewhtmlApp
@@ -86,7 +98,11 @@ static const CLSID BASED_CODE clsid =
 
 BOOL CViewhtmlApp::InitInstance()
 {
-	
+#ifdef _DEBUG
+	_CrtSetReportHook(CrashOnAssertion);
+	SetUIThreadID();
+#endif
+
 	SetRegistryKey("ExCITE");
 	// Read initial registry entries
 	ReadRegistryInfo();
@@ -185,7 +201,7 @@ BOOL CViewhtmlApp::InitInstance()
 	
 	if (m_lpCmdLine[0] != '\0')
 		{
-		// TODO: add command line processing here
+		OpenDocumentFile(m_lpCmdLine);
 		}
 	else
 		{

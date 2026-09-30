@@ -1588,8 +1588,15 @@ BOOL CControlItem::CheckIfLocalOCX(CString& ocxPath)
 	while(::RegEnumKey(hKeyClsid, dwIndex++, szClsidName, MAX_PATH+1) == ERROR_SUCCESS)
 	{
 		// Check if it is what we are looking for?
+		// CLSIDFromString always takes a wide string (OLE strings are wide
+		// even in ANSI/MBCS builds), so szClsidName must be converted first
+		// rather than reinterpret-cast to LPOLESTR -- otherwise the
+		// comparison below never matches any CLSID.
+		WCHAR	wszClsidName[MAX_PATH + 1];
+		MultiByteToWideChar(CP_ACP, 0, szClsidName, -1, wszClsidName, MAX_PATH + 1);
+
 		CLSID	lookupId;
-		CLSIDFromString((LPOLESTR) szClsidName, (LPCLSID) &lookupId);
+		CLSIDFromString(wszClsidName, (LPCLSID) &lookupId);
 		if (!IsEqualCLSID(m_objCLSID, lookupId)) 
 		{
 			if ( m_reasonRegistry != incorrectSystem )

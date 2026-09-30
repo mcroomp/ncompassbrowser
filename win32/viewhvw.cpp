@@ -935,6 +935,8 @@ BOOL CViewhtmlView::CheckIfCreatedBefore(CFormatOLEControlItem* item)
 	
 void CViewhtmlView::OnDynamicNotify( INT32 change_flags, CDynamicLoad *source)
 	{
+	ASSERT_UI_THREAD();
+
 	/* message sent to us telling us one of three things has happened:
 
 	1) the parsed text just got longer, so we have to reformat

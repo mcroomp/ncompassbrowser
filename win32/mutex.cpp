@@ -51,6 +51,7 @@ void CAccessLock::Unlock()
 	m_is_locked = FALSE;
 	m_source_file = NULL;
 	m_line_number = 0;
+	m_thread_owner = NULL;
 
 	if (InterlockedDecrement(&m_interlock) >= 0)
 		{
@@ -62,6 +63,33 @@ void CAccessLock::Unlock()
 void CAccessLock::AssertLocked() const
 	{
 	ASSERT(m_is_locked);
+	}
+
+#endif
+
+///////////////////////////////////////////////
+// thread model boundary assertions
+///////////////////////////////////////////////
+
+#ifdef _DEBUG
+
+static DWORD g_ui_thread_id = 0;
+
+void SetUIThreadID()
+	{
+	g_ui_thread_id = GetCurrentThreadId();
+	}
+
+void AssertUIThread()
+	{
+	// a thread ID of 0 means SetUIThreadID() hasn't run yet (e.g. a static
+	// constructor); don't fail assertions before the app has started up
+	ASSERT(g_ui_thread_id == 0 || GetCurrentThreadId() == g_ui_thread_id);
+	}
+
+void AssertWorkerThread()
+	{
+	ASSERT(g_ui_thread_id == 0 || GetCurrentThreadId() != g_ui_thread_id);
 	}
 
 #endif

@@ -227,7 +227,7 @@ void ParseColspec(CTagTable *table, LPCSTR colspec)
 				break;
 
 			}
-		if ( !isdigit(*colspec) )
+		if ( !isdigit((unsigned char)*colspec) )
 			colspec++;
 
 		amount = StringToINT32( colspec, FALSE, &colspec );
@@ -281,7 +281,7 @@ int strnicmp(const char *string1, const char *string2, INT32 maxlen)
 				return -1;
 			}
 		
-		if ((retval = (toupper(*string1) - toupper(*string2)) ) != 0)
+		if ((retval = (toupper((unsigned char)*string1) - toupper((unsigned char)*string2)) ) != 0)
 			return retval;
 		*string1++;
 		*string2++;
@@ -321,6 +321,8 @@ CParseHTML::CParseHTML( CMimeDynamicLoad *parent )
 
 	m_inside_tag = FALSE;
 	m_inside_iso_code = FALSE;
+	m_inside_script = FALSE;
+	m_script_end_match = 0;
 	m_bPreformatted = 0;
 	m_bInHead = 0;
 	m_bInTitle = 0;
@@ -559,7 +561,7 @@ char ParseIsoCode( const char *source )
 		// we have a numeric code
 		source++;
 		int number = 0;
-		while( isdigit( *source ) )
+		while( isdigit( (unsigned char)*source ) )
 			{
 			number = number * 10 + (*source - '0' );
 			source++;
@@ -598,7 +600,7 @@ void ParseTag(CPtrList& attrib_list, const char *tagstart, CString& store_name)
 		
 	skipspaces(&p);
 	fieldstart = p;
-	while(*p && isalnum(*p) || *p == '/')
+	while(*p && isalnum((unsigned char)*p) || *p == '/')
 		p++;
 	
 	store_name = CString(fieldstart, p - fieldstart);	
@@ -612,7 +614,7 @@ void ParseTag(CPtrList& attrib_list, const char *tagstart, CString& store_name)
 
 		fieldstart = p;
 		fieldnamelen = 0;
-		while(isalnum(*p) || *p == '-' || *p == '_' )
+		while(isalnum((unsigned char)*p) || *p == '-' || *p == '_' )
 			p++, fieldnamelen++;
 
 		if (fieldnamelen == 0)
@@ -741,6 +743,53 @@ LOAD_STATE CParseHTML::OnReadData(LPCBYTE buffer, INT32 buffer_size)
 	
 	while(!done)
 		{
+		if (m_inside_script)
+			{
+			static const char script_end[] = "</script";
+
+			while(amount_left > 0 && m_inside_script)
+				{
+				char c = *pbuffer++;
+				amount_left--;
+
+				if (c >= 'A' && c <= 'Z')
+					c += 'a' - 'A';
+
+				if (m_script_end_match < 8)
+					{
+					if (c == script_end[m_script_end_match])
+						m_script_end_match++;
+					else
+						m_script_end_match = (c == '<') ? 1 : 0;
+					}
+				else if (m_script_end_match == 8)
+					{
+					if (c == '>')
+						{
+						m_inside_script = FALSE;
+						m_script_end_match = 0;
+						}
+					else if (c == ' ' || c == '\t' || c == '\r' || c == '\n')
+						m_script_end_match = 9;
+					else
+						m_script_end_match = (c == '<') ? 1 : 0;
+					}
+				else if (c == '>')
+					{
+					m_inside_script = FALSE;
+					m_script_end_match = 0;
+					}
+				}
+
+			if (m_inside_script)
+				{
+				Notify(CHANGEFLAG_ADD_TEXT);
+				return LOAD_STATE_LOADING;
+				}
+
+			continue;
+			}
+
 		// find the beginning of a tag
 		p = (LPCSTR)memchr(pbuffer, '<', amount_left);
 
@@ -805,6 +854,13 @@ got_a_tag:
 		// if we are in the header, then set the flag to ignore subsequent text
  
  		STRING_ID strid = GetStringID(store_name);
+
+		if (store_name == "script")
+			{
+			m_inside_script = TRUE;
+			m_script_end_match = 0;
+			strid = STR_UNKNOWN;
+			}
  		
  		switch(strid)
  			{

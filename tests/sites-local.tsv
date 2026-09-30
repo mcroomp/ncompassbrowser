@@ -1,0 +1,6 @@
+# These host names are intentionally mapped to 127.0.0.1 in the test
+# machine's hosts file. Start the corresponding fixture server before use.
+# name	url	expected title
+cnn-local	https://www.cnn.com/	CNN
+bbc-local	https://www.bbc.com/	BBC
+nytimes-local	https://www.nytimes.com/	The New York Times

@@ -229,7 +229,7 @@ void ParseColspec(CTagTable *table, LPCSTR colspec)
 				break;
 
 			}
-		if ( !isdigit(*colspec) )
+		if ( !isdigit((unsigned char)*colspec) )
 			colspec++;
 
 		amount = StringToINT32( colspec, FALSE, &colspec );
@@ -283,7 +283,7 @@ int strnicmp(const char *string1, const char *string2, INT32 maxlen)
 				return -1;
 			}
 		
-		if ((retval = (toupper(*string1) - toupper(*string2)) ) != 0)
+		if ((retval = (toupper((unsigned char)*string1) - toupper((unsigned char)*string2)) ) != 0)
 			return retval;
 		*string1++;
 		*string2++;
@@ -301,6 +301,11 @@ int strmatch(const char *source, const char *match)
 	}
 
 #define numformatcodes (sizeof(formatcodes)/sizeof(formatcodes[0]))		
+
+BOOL IsIsoCodeCharacter(char c, INT32 position)
+	{
+	return isalnum((unsigned char)c) || (position == 1 && c == '#');
+	}
 
 
 CParseHTML::CParseHTML( LPCSTR url, LPCSTR mime_type, BOOL is_plain_text )
@@ -323,6 +328,12 @@ CParseHTML::CParseHTML( LPCSTR url, LPCSTR mime_type, BOOL is_plain_text )
 
 	m_inside_tag = FALSE;
 	m_inside_iso_code = FALSE;
+	m_inside_raw_text = FALSE;
+	m_raw_text_end_match = 0;
+	m_seen_pref_cr = FALSE;
+	m_seen_pref_lf = FALSE;
+	m_seen_plain_cr = FALSE;
+	m_seen_plain_lf = FALSE;
 	m_bPreformatted = 0;
 	m_bInHead = 0;
 	m_bInTitle = 0;
@@ -356,18 +367,27 @@ void CParseHTML::append_html_text(const char *source, INT32 charcount)
 	if (m_inside_iso_code)
 		{
 		LPCSTR p = (LPCSTR)memchr(source, ';', charcount);
+		INT32 check_length = p ? p - source : charcount;
+
+		for (INT32 i = 0; i < check_length; i++)
+			{
+			if (!IsIsoCodeCharacter(source[i],
+				m_current_iso_code.GetLength() + i))
+				goto bad_iso_code;
+			}
 
 		if (p)
 			{
 			int length = p - source + 1;
 
-			if (length > 10)
+			if (m_current_iso_code.GetLength() + length - 1 > 10)
 				goto bad_iso_code;
 
 			m_current_iso_code += CString(source, length);
 			AppendChar( ParseIsoCode( m_current_iso_code ) );
 			m_current_iso_code.Empty();
 			m_inside_iso_code = FALSE;
+			m_last_space = FALSE;
 			source += length;
 			charcount -= length;
 			}
@@ -376,13 +396,17 @@ void CParseHTML::append_html_text(const char *source, INT32 charcount)
 			if (m_current_iso_code.GetLength() + charcount > 10)
 				{
 bad_iso_code:
+				CString pending = m_current_iso_code.Mid(1);
+				pending += CString(source, charcount);
 				m_inside_iso_code = FALSE;
-				CString t = m_current_iso_code;
 				AppendChar('&');
-
 				m_current_iso_code.Empty();
-				if (t.GetLength() > 0)
-					AppendString(t, t.GetLength() );
+				m_last_space = FALSE;
+				AddFormatTagText(startpos,
+					m_plain_text.GetLength() - startpos, m_font_flags);
+				if (!pending.IsEmpty())
+					append_html_text(pending, pending.GetLength());
+				return;
 				}
 			else
 				{
@@ -410,12 +434,17 @@ bad_iso_code:
 
 			int length;
 
-			if (!p)
+			if (charcount > 1 && !IsIsoCodeCharacter(source[1], 1))
+				{
+				length = 0;
+				AppendChar('&');
+				}
+			else if (!p)
 				{
 				// try to ignore badly formatted HTML with & in it
 				if (charcount > 7)
 					{
-					length = 1;
+					length = 0;
 					AppendChar('&');
 					}
 				else
@@ -431,7 +460,7 @@ bad_iso_code:
 				length = p - source;
 				if (length > 10)
 					{
-					length =1;
+					length = 0;
 					AppendChar('&');
 					}
 				else
@@ -459,20 +488,56 @@ bad_iso_code:
 
 void CParseHTML::append_pref_text(const char *source, INT32 charcount)
 	{
-	BOOL seen_cr = FALSE, seen_lf = FALSE;	
 	INT32 startpos = m_plain_text.GetLength(), textlen = 0;
 
 	if (m_inside_iso_code)
 		{
 		LPCSTR p = (LPCSTR)memchr(source, ';', charcount);
+		INT32 check_length = p ? p - source : charcount;
+
+		for (INT32 i = 0; i < check_length; i++)
+			{
+			if (!IsIsoCodeCharacter(source[i],
+				m_current_iso_code.GetLength() + i))
+				goto bad_pref_iso_code;
+			}
 
 		if (p)
 			{
-			m_current_iso_code += CString(source, p - source + 1);
+			int length = p - source + 1;
+			if (m_current_iso_code.GetLength() + length - 1 > 10)
+				goto bad_pref_iso_code;
+
+			m_current_iso_code += CString(source, length);
 			AppendChar( ParseIsoCode( m_current_iso_code ) );
+			m_current_iso_code.Empty();
+			m_inside_iso_code = FALSE;
+			source += length;
+			charcount -= length;
+			textlen++;
+			m_seen_pref_cr = FALSE;
+			m_seen_pref_lf = FALSE;
 			}
 		else
 			{
+			if (m_current_iso_code.GetLength() + charcount > 10)
+				{
+bad_pref_iso_code:
+				CString pending = m_current_iso_code.Mid(1);
+				pending += CString(source, charcount);
+				m_inside_iso_code = FALSE;
+				AppendChar('&');
+				m_current_iso_code.Empty();
+				m_seen_pref_cr = FALSE;
+				m_seen_pref_lf = FALSE;
+				AddFormatTagText(startpos,
+					m_plain_text.GetLength() - startpos,
+					m_font_flags|FONTFLAG_NO_WRAP);
+				if (!pending.IsEmpty())
+					append_pref_text(pending, pending.GetLength());
+				return;
+				}
+
 			m_current_iso_code += CString(source, charcount);
 			return;
 			}
@@ -482,29 +547,29 @@ void CParseHTML::append_pref_text(const char *source, INT32 charcount)
 		{
 		if (*source == '\r')
 			{
-			if (seen_lf == FALSE)
+			if (m_seen_pref_lf == FALSE)
 				{
 				AddFormatTagText(startpos, textlen, m_font_flags|FONTFLAG_NO_WRAP);
 				startpos = m_plain_text.GetLength(); textlen = 0;
 				AddFormatTag(TAG_NEWLINE_HARD_BREAK);
-				seen_cr = TRUE;
+				m_seen_pref_cr = TRUE;
 				}
 			}
 		else if (*source == '\n')
 			{
-			if (seen_cr == FALSE)
+			if (m_seen_pref_cr == FALSE)
 				{
 				AddFormatTagText(startpos, textlen, m_font_flags|FONTFLAG_NO_WRAP);
 				startpos = m_plain_text.GetLength(); textlen = 0;
 				AddFormatTag(TAG_NEWLINE_HARD_BREAK);
-				seen_lf = TRUE;
+				m_seen_pref_lf = TRUE;
 				}
 			}
 		else if (*source == '\t')
 			{
 			AppendString("    ",4);
-			seen_cr = FALSE;
-			seen_lf = FALSE;
+			m_seen_pref_cr = FALSE;
+			m_seen_pref_lf = FALSE;
 			textlen+=4;
 			}
 		else if (*source == '&')
@@ -513,29 +578,50 @@ void CParseHTML::append_pref_text(const char *source, INT32 charcount)
 		
 			LPCSTR p = (LPCSTR)memchr(source, ';', charcount);
 
-			if (!p)
+			if (charcount > 1 && !IsIsoCodeCharacter(source[1], 1))
 				{
-				m_inside_iso_code = TRUE;
-				m_current_iso_code = CString(source, charcount);
-				AddFormatTagText(startpos, m_plain_text.GetLength() - startpos, m_font_flags|FONTFLAG_NO_WRAP); 
-				return;
+				AppendChar('&');
+				textlen++;
+				m_seen_pref_cr = FALSE;
+				m_seen_pref_lf = FALSE;
 				}
-			
-			int length = p - source;
+			else if (!p)
+				{
+				if (charcount > 10)
+					{
+					AppendChar('&');
+					textlen++;
+					m_seen_pref_cr = FALSE;
+					m_seen_pref_lf = FALSE;
+					}
+				else
+					{
+					m_inside_iso_code = TRUE;
+					m_current_iso_code = CString(source, charcount);
+					AddFormatTagText(startpos,
+						m_plain_text.GetLength() - startpos,
+						m_font_flags|FONTFLAG_NO_WRAP);
+					return;
+					}
+				}
+			else
+				{
+				int length = p - source;
 
-			AppendChar( ParseIsoCode( source ) );
-			
-			source += length;
-			charcount -= length;
-			textlen++;
-			seen_cr = FALSE;
-			seen_lf = FALSE;
+				AppendChar( ParseIsoCode( source ) );
+
+				source += length;
+				charcount -= length;
+				textlen++;
+				m_seen_pref_cr = FALSE;
+				m_seen_pref_lf = FALSE;
+				}
 			}
 		else
 			{
 			AppendChar(*source);
-			seen_cr = FALSE;
-			seen_lf = FALSE;
+			m_seen_pref_cr = FALSE;
+			m_seen_pref_lf = FALSE;
 			textlen++;
 			}
 		source++;
@@ -547,43 +633,42 @@ void CParseHTML::append_pref_text(const char *source, INT32 charcount)
 
 void CParseHTML::append_plain_text(const char *source, INT32 charcount)
 	{
-	BOOL seen_cr = FALSE, seen_lf = FALSE;	
 	INT32 startpos = m_plain_text.GetLength(), textlen = 0;
 
 	while(charcount > 0)
 		{
 		if (*source == '\r')
 			{
-			if (seen_lf == FALSE)
+			if (m_seen_plain_lf == FALSE)
 				{
 				AddFormatTagText(startpos, textlen, 3|FONTFLAG_NO_WRAP|FONTFLAG_FIXED);
 				startpos = m_plain_text.GetLength(); textlen = 0;
 				AddFormatTag(TAG_NEWLINE_HARD_BREAK);
-				seen_cr = TRUE;
+				m_seen_plain_cr = TRUE;
 				}
 			}
 		else if (*source == '\n')
 			{
-			if (seen_cr == FALSE)
+			if (m_seen_plain_cr == FALSE)
 				{
 				AddFormatTagText(startpos, textlen, 3|FONTFLAG_NO_WRAP|FONTFLAG_FIXED);
 				startpos = m_plain_text.GetLength(); textlen = 0;
 				AddFormatTag(TAG_NEWLINE_HARD_BREAK);
-				seen_lf = TRUE;
+				m_seen_plain_lf = TRUE;
 				}
 			}
 		else if (*source == '\t')
 			{
 			AppendString("    ",4);
-			seen_cr = FALSE;
-			seen_lf = FALSE;
+			m_seen_plain_cr = FALSE;
+			m_seen_plain_lf = FALSE;
 			textlen+=4;
 			}
 		else
 			{
 			AppendChar(*source);
-			seen_cr = FALSE;
-			seen_lf = FALSE;
+			m_seen_plain_cr = FALSE;
+			m_seen_plain_lf = FALSE;
 			textlen++;
 			}
 		source++;
@@ -610,15 +695,27 @@ char ParseIsoCode( const char *source )
 
 	if (*source == '#')
 		{
-		// we have a numeric code
 		source++;
-		int number = 0;
-		while( isdigit( *source ) )
+		int base = 10;
+		if (*source == 'x' || *source == 'X')
 			{
-			number = number * 10 + (*source - '0' );
+			base = 16;
 			source++;
 			}
-		return (char)number;
+
+		int number = 0;
+		while (isdigit((unsigned char)*source) ||
+			(base == 16 && strchr("ABCDEFabcdef", *source)))
+			{
+			int digit;
+			if (isdigit((unsigned char)*source))
+				digit = *source - '0';
+			else
+				digit = toupper((unsigned char)*source) - 'A' + 10;
+			number = number * base + digit;
+			source++;
+			}
+		return number > 0 && number <= 255 ? (char)number : '?';
 		}
 	else
 		{
@@ -652,7 +749,7 @@ void ParseTag(CPtrList& attrib_list, const char *tagstart, CString& store_name)
 		
 	skipspaces(&p);
 	fieldstart = p;
-	while(*p && isalnum(*p) || *p == '/')
+	while(*p && isalnum((unsigned char)*p) || *p == '/')
 		p++;
 	
 	store_name = CString(fieldstart, p - fieldstart);	
@@ -666,7 +763,7 @@ void ParseTag(CPtrList& attrib_list, const char *tagstart, CString& store_name)
 
 		fieldstart = p;
 		fieldnamelen = 0;
-		while(isalnum(*p) || *p == '-' || *p == '_' )
+		while(isalnum((unsigned char)*p) || *p == '-' || *p == '_' )
 			p++, fieldnamelen++;
 
 		if (fieldnamelen == 0)
@@ -750,6 +847,8 @@ STRING_ID GetStringID(const char *tagname)
 
 LOAD_STATE CParseHTML::OnReadData(LPCBYTE buffer, INT32 buffer_size)
 	{
+	ASSERT_WORKER_THREAD();
+
 	LPCSTR pbuffer = (LPCSTR)buffer;
 	LPCSTR tagend,p;
 
@@ -799,6 +898,53 @@ LOAD_STATE CParseHTML::OnReadData(LPCBYTE buffer, INT32 buffer_size)
 	
 	while(!done)
 		{
+		if (m_inside_raw_text)
+			{
+			const int raw_text_end_length = m_raw_text_end.GetLength();
+
+			while(amount_left > 0 && m_inside_raw_text)
+				{
+				char c = *pbuffer++;
+				amount_left--;
+
+				if (c >= 'A' && c <= 'Z')
+					c += 'a' - 'A';
+
+				if (m_raw_text_end_match < raw_text_end_length)
+					{
+					if (c == m_raw_text_end[m_raw_text_end_match])
+						m_raw_text_end_match++;
+					else
+						m_raw_text_end_match = (c == '<') ? 1 : 0;
+					}
+				else if (m_raw_text_end_match == raw_text_end_length)
+					{
+					if (c == '>')
+						{
+						m_inside_raw_text = FALSE;
+						m_raw_text_end_match = 0;
+						}
+					else if (c == ' ' || c == '\t' || c == '\r' || c == '\n')
+						m_raw_text_end_match = raw_text_end_length + 1;
+					else
+						m_raw_text_end_match = (c == '<') ? 1 : 0;
+					}
+				else if (c == '>')
+					{
+					m_inside_raw_text = FALSE;
+					m_raw_text_end_match = 0;
+					}
+				}
+
+			if (m_inside_raw_text)
+				{
+				Notify(CHANGEFLAG_ADD_TEXT);
+				return LOAD_STATE_LOADING;
+				}
+
+			continue;
+			}
+
 		// find the beginning of a tag
 		p = (LPCSTR)memchr(pbuffer, '<', amount_left);
 
@@ -862,6 +1008,14 @@ got_a_tag:
 		// if we are in the header, then set the flag to ignore subsequent text
  
  		STRING_ID strid = GetStringID(store_name);
+
+		if (store_name == "script" || store_name == "style")
+			{
+			m_inside_raw_text = TRUE;
+			m_raw_text_end = "</" + store_name;
+			m_raw_text_end_match = 0;
+			strid = STR_UNKNOWN;
+			}
  		
  		switch(strid)
  			{
@@ -1799,6 +1953,8 @@ void CParseHTML::BeginTableRow( const CPtrList& attrib_list )
 
 LOAD_STATE CParseHTML::OnEndOfFile()
 	{
+	ASSERT_WORKER_THREAD();
+
 	AddFormatTag( TAG_NEWLINE );
 	
 	Notify(CHANGEFLAG_DONE);
@@ -1827,7 +1983,11 @@ LOAD_STATE CParseHTML::OnEndOfFile()
 CTagOLEControl::CTagOLEControl(ALIGN_TYPE align, const char *url, INT32 width, INT32 height, INT32 hspace, INT32 vspace, const CLSID& clsid, LPCSTR ocx_url, LPCSTR version)
 	 : CTag(TAG_OLECONTROL)
 	{ 
-static INT32 parse_id = 0; 
+#ifdef _WINDOWS
+static LONG parse_id = 0;
+#else
+static INT32 parse_id = 0;
+#endif
 
 	m_align = align; 
 	m_url = url; 
@@ -1835,7 +1995,11 @@ static INT32 parse_id = 0;
 	m_vspace = vspace; 
 	m_height = height; 
 	m_width = width; 
+#ifdef _WINDOWS
+	m_parse_id = InterlockedIncrement(&parse_id) - 1;
+#else
 	m_parse_id = parse_id++;
+#endif
 	m_clsid = clsid;
 	m_ocx_url = ocx_url;
 	m_version = version;

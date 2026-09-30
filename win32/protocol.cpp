@@ -9,6 +9,8 @@
 
 #ifndef _PROTOCOL_H_
 #include "protocol.h"
+
+#include <shlwapi.h>
 #endif
 
 #define WM_HTTP_SOCKET_EVENT 	(WM_USER)
@@ -91,45 +93,30 @@ CProtocol::~CProtocol()
 
 CString ConvertFilenameToURL( LPCSTR filename)
 	{
-	CString str( "file:///" );
+	DWORD full_length = GetFullPathName(filename, 0, NULL, NULL);
+	if (full_length == 0)
+		return "";
 
-	char buffer[256];
-
-	GetFullPathName( filename, sizeof(buffer), buffer, NULL);
-
-	char *p = buffer;
-	BYTE b;
-
-	while(*p)
+	CString full_path;
+	LPSTR full_buffer = full_path.GetBuffer(full_length);
+	if (GetFullPathName(filename, full_length, full_buffer, NULL) == 0)
 		{
-		switch(*p)
-			{
-			case '=':
-			case ';':
-			case ' ':
-			case '/':
-			case '#':
-			case '?':
-			case '%':
-				b = (BYTE)*p;
-
-				str += '%';
-				str += (char)('0' + (b>>4));
-				str += (char)('0' + (b&0xf));
-				break;
-			case ':':
-				str += '|';
-				break;			
-			case '\\':
-				str += '/';
-				break;
-			default:
-				str += *p;
-				break;
-			}
-		p++;
+		full_path.ReleaseBuffer(0);
+		return "";
 		}
-	return str;
+	full_path.ReleaseBuffer();
+
+	DWORD url_length = full_path.GetLength() * 3 + 16;
+	CString url;
+	LPSTR url_buffer = url.GetBuffer(url_length);
+	HRESULT result = UrlCreateFromPath(full_path, url_buffer, &url_length, 0);
+	if (FAILED(result))
+		{
+		url.ReleaseBuffer(0);
+		return "";
+		}
+	url.ReleaseBuffer();
+	return url;
 	}
 
 
@@ -161,7 +148,6 @@ UINT FileWorkerThread( LPVOID lparam )
 		CString url = dlobject->GetURL();
 	
 		CFileException e;
-		const char *p = ((const char *)url);
 		
 		if (dlobject->GetMethodType() != METHOD_GET)
 			{
@@ -179,49 +165,18 @@ UINT FileWorkerThread( LPVOID lparam )
 
 		dlobject->Unlock();
 
-		if (memicmp(url, "file:///", 8) != 0)
+		DWORD filename_length = url.GetLength() + 1;
+		LPSTR filename_buffer = filename.GetBuffer(filename_length);
+		HRESULT path_result = PathCreateFromUrl(url, filename_buffer,
+			&filename_length, 0);
+		if (FAILED(path_result))
 			{
+			filename.ReleaseBuffer(0);
 			dlobject->DEBUG_LOCK();
 			dlobject->SetErrorMessage(IDS_BAD_URL, url );
 			goto error_exit;
 			}
-
-		p+=8;
-
-		if (strchr(p,'|') == NULL)
-			filename += '\\';		// if filename does not contain a drive letter, make it absolute
-
-		while(*p)
-			{
-			if (*p == '%')
-				{
-				char str[3] = { *(p+1), *(p+2), 0 };
-				char *p;
-		
-				// convert from base 16
-				long l = strtol( str, &p, 16);
-				if (l != 0)
-					filename += (char)l;
-
-				p+=3;
-				}
-			else if (*p == '|')
-				{
-				filename += ':';
-				p++;
-				}
-			else if (*p == '/')
-				{
-				filename += '\\';
-				p++;
-				}
-			else
-				{
-				filename += *p;
-				p++;
-				}			
-			}
-
+		filename.ReleaseBuffer();
 
 		CString progress;
 		progress.Format("Opening file %s", filename);
@@ -345,6 +300,15 @@ UINT FileWorkerThread( LPVOID lparam )
 				}
 			}
 		// early termination has been requested, so terminate
+		dlobject->DEBUG_LOCK();
+		protocol->SetLoadState(LOAD_STATE_ABORTED);
+		dlobject->Unlock();
+
+		protocol->CallOnEndLoading();
+
+		dlobject->DEBUG_LOCK();
+		protocol->CallNotify( CHANGEFLAG_DONE );
+		dlobject->Unlock();
 		ReleaseSemaphore(protocol->m_thread_done_semaphore,1,NULL);
 		return 3;
 		}
@@ -385,111 +349,54 @@ void CProtocolFile::WaitEndLoadThread()
 	}
 
 ///////////////////////////////////////////////////////////
-// CProtocolHTTP 
+// CProtocolUnknown
 
-CProtocolHTTP::CProtocolHTTP(CDynamicLoad *load_object)
-	: CProtocol(load_object )
+CProtocolUnknown::CProtocolUnknown(CDynamicLoad *load_object)
+	: CProtocol(load_object)
 	{
-	m_thread_handle = NULL;
 	m_thread_done_semaphore = CreateSemaphore(NULL, 0, 1, NULL);
 	}
 
-CProtocolHTTP::~CProtocolHTTP()
+CProtocolUnknown::~CProtocolUnknown()
 	{
 	ASSERT(m_thread_handle == NULL);
 	CloseHandle(m_thread_done_semaphore);
 	}
 
-void CProtocolHTTP::BeginLoadThread()
+UINT UnknownProtocolWorkerThread( LPVOID lparam )
 	{
-	m_thread_handle = AfxBeginThread( HTTPWorkerThread, (LPVOID)this );
+	CProtocolUnknown *protocol = (CProtocolUnknown *)lparam;
+	CDynamicLoad *dlobject = protocol->m_load_object;
+
+	LOAD_STATE l = protocol->CallOnEndLoading();
+
+	dlobject->DEBUG_LOCK();
+	protocol->SetLoadState(l);
+	protocol->CallNotify( CHANGEFLAG_DONE );
+	dlobject->Unlock();
+
+	ReleaseSemaphore(protocol->m_thread_done_semaphore,1,NULL);
+	return 0;
 	}
 
-void CProtocolHTTP::AbortLoadThread()
+void CProtocolUnknown::BeginLoadThread()
 	{
-	ASSERT(m_thread_handle);
-	
-	// do everything possible to get the thread to teminate as quickly as possible
+	m_thread_handle = AfxBeginThread( UnknownProtocolWorkerThread, (LPVOID)this );
+	}
 
-	m_socket.Abort();
-
+void CProtocolUnknown::AbortLoadThread()
+	{
 	WaitForSingleObject( m_thread_done_semaphore, INFINITE );
 	m_thread_handle = NULL;
 	}
 
-void CProtocolHTTP::WaitEndLoadThread()
+void CProtocolUnknown::WaitEndLoadThread()
 	{
-	ASSERT(m_thread_handle);
 	WaitForSingleObject( m_thread_done_semaphore, INFINITE );
 	m_thread_handle = NULL;
 	}
 
-BOOL ParseHeader(BOOL& first_line, LPBYTE &buffer,INT32& amount,CString& current_line,CMapStringToString& mime_map, INT32& response_code)
-	{
-	const char *p;
-
-	while(amount > 0)
-		{
-		switch(*buffer)
-			{
-			case '\r':
-				break;
-			case '\n':
-				if (current_line.GetLength() == 0)
-					{
-					buffer++;
-					amount--;
-					return TRUE;
-					}
-
-				p = current_line;
-
-				if (first_line)
-					{
-					// skip initial spaces
-					while(*p && *p == ' ')
-						p++;
-					
-					// skip HTTP/1.0
-					while(*p && *p != ' ')
-						p++;
-					
-					// skip spaces before response code
-					while(*p && *p == ' ')
-						p++;
-					
-					response_code = atoi(p);
-					first_line = FALSE;
-					}
-				else
-					{	
-					const char *colon = strchr(p, ':');
-					// ignore bad header string that doesn't have a colon
-					if (colon)
-						{
-						int width = colon - p;
-
-						colon++; 
-						while(*colon == ' ' || *colon == '\t' )
-							colon++;
-
-						CString label = CString( p, width);
-						label.MakeLower();
-
-						mime_map [label] = CString(colon);
-						}
-					}
-				current_line.Empty();						
-				break;
-			default:
-				current_line += *buffer;
-				break;
-			}
-		buffer++; amount--;
-		}
-	return FALSE;
-	}
-
+#if 0
 #define HTTP_STATE_READING_HEADER   1
 #define HTTP_STATE_READING_DATA 	2
 
@@ -763,4 +670,5 @@ done_complete:
 			}
 		}
 	}
-	
+
+#endif

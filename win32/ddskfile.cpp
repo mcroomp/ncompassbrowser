@@ -54,6 +54,8 @@ CDynLoadDiskFile::CDynLoadDiskFile(CNotifyObject *notify, LPCSTR url, LPCTSTR fi
 
 LOAD_STATE CDynLoadDiskFile::OnBeginLoading( const CMapStringToString& mime_type )
 	{
+	ASSERT_WORKER_THREAD();
+
 	DEBUG_LOCK();
 
 	POSITION walk = mime_type.GetStartPosition();
@@ -73,6 +75,8 @@ LOAD_STATE CDynLoadDiskFile::OnBeginLoading( const CMapStringToString& mime_type
 
 LOAD_STATE CDynLoadDiskFile::OnLoading(LPCBYTE buffer, INT32 buffer_size)
 	{
+	ASSERT_WORKER_THREAD();
+
 	DEBUG_LOCK();
 	m_diskFile->SeekToEnd();
 	m_diskFile->Write(buffer, static_cast<UINT>(buffer_size));
@@ -84,6 +88,8 @@ LOAD_STATE CDynLoadDiskFile::OnLoading(LPCBYTE buffer, INT32 buffer_size)
 
 LOAD_STATE CDynLoadDiskFile::OnEndLoading()
 	{
+	ASSERT_WORKER_THREAD();
+
 	DEBUG_LOCK();
 	Notify( CHANGEFLAG_DONE );
 	LOAD_STATE l = GetLoadState();

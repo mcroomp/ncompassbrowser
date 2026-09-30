@@ -169,6 +169,8 @@ CMimeDynamicLoad::~CMimeDynamicLoad()
 
 LOAD_STATE CMimeDynamicLoad::OnPreLoading()
 	{
+	ASSERT_UI_THREAD();
+
 	globals->m_access_lock.DEBUG_LOCK();
 	DEBUG_LOCK();
 	CString url = GetURL();
@@ -225,6 +227,8 @@ LOAD_STATE CMimeDynamicLoad::OnPreLoading()
 
 LOAD_STATE CMimeDynamicLoad::OnBeginLoading( const CMapStringToString& header )
 	{
+	ASSERT_WORKER_THREAD();
+
 	CString mime_type;
 	CMimeObject *mime_object;
 
@@ -285,6 +289,7 @@ LOAD_STATE CMimeDynamicLoad::OnBeginLoading( const CMapStringToString& header )
 
 LOAD_STATE CMimeDynamicLoad::OnLoading(LPCBYTE buffer, INT32 buffer_size)
 	{
+	ASSERT_WORKER_THREAD();
 	ASSERT(m_mime_object);
 
 	DEBUG_LOCK();
@@ -302,6 +307,8 @@ LOAD_STATE CMimeDynamicLoad::OnLoading(LPCBYTE buffer, INT32 buffer_size)
 
 LOAD_STATE CMimeDynamicLoad::OnEndLoading()
 	{
+	ASSERT_WORKER_THREAD();
+
 	if (!m_mime_object)
 		{
 		return LOAD_STATE_ABORTED;

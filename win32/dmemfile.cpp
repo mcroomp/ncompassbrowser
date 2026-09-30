@@ -14,6 +14,8 @@ CDynLoadMemFile::CDynLoadMemFile(CNotifyObject *notify, LPCSTR url, METHOD_TYPE 
 
 LOAD_STATE CDynLoadMemFile::OnBeginLoading( const CMapStringToString& mime_type )
 	{
+	ASSERT_WORKER_THREAD();
+
 	DEBUG_LOCK();
 
 	POSITION walk = mime_type.GetStartPosition();
@@ -33,6 +35,8 @@ LOAD_STATE CDynLoadMemFile::OnBeginLoading( const CMapStringToString& mime_type 
 
 LOAD_STATE CDynLoadMemFile::OnLoading(LPCBYTE buffer, INT32 buffer_size)
 	{
+	ASSERT_WORKER_THREAD();
+
 	DEBUG_LOCK();
 
 	m_memfile.SeekToEnd();
@@ -46,6 +50,8 @@ LOAD_STATE CDynLoadMemFile::OnLoading(LPCBYTE buffer, INT32 buffer_size)
 
 LOAD_STATE CDynLoadMemFile::OnEndLoading()
 	{
+	ASSERT_WORKER_THREAD();
+
 	DEBUG_LOCK();
 	Notify( CHANGEFLAG_DONE );
 	LOAD_STATE l = GetLoadState();
@@ -128,6 +134,8 @@ CMimeLoadMemFile::CMimeLoadMemFile(LPCSTR url, LPCSTR mime_type)
 
 LOAD_STATE CMimeLoadMemFile::OnReadData(LPCBYTE buffer, INT32 buffer_size)
 	{
+	ASSERT_WORKER_THREAD();
+
 	DEBUG_LOCK();
 	m_data.AppendData(buffer, buffer_size );
 	Notify( CHANGEFLAG_FILE_GROW );
@@ -138,6 +146,8 @@ LOAD_STATE CMimeLoadMemFile::OnReadData(LPCBYTE buffer, INT32 buffer_size)
 
 LOAD_STATE CMimeLoadMemFile::OnEndOfFile()
 	{
+	ASSERT_WORKER_THREAD();
+
 	DEBUG_LOCK();
 	LOAD_STATE l = GetLoadState();
 	Unlock();

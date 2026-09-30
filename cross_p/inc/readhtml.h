@@ -377,8 +377,11 @@ private:
 		// TRUE if we should ignore all HTML tags and treat the rest of this file as plain text
 
 // current parsing state
-	BOOL m_inside_tag, m_inside_iso_code;
-	CString m_current_tag, m_current_iso_code;
+	BOOL m_inside_tag, m_inside_iso_code, m_inside_raw_text;
+	INT m_raw_text_end_match;
+	CString m_current_tag, m_current_iso_code, m_raw_text_end;
+	BOOL m_seen_pref_cr, m_seen_pref_lf;
+	BOOL m_seen_plain_cr, m_seen_plain_lf;
 
 	BOOL m_last_space;
 	INT32 m_current_indent;

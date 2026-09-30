@@ -95,7 +95,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;      // fail to create
 	}
 
-	m_wndToolBar.SetSizes( CSize(70,38), CSize(64,32) );
+	m_wndToolBar.SetSizes( CSize(71,38), CSize(64,32) );
 
 	if (!m_wndStatusBar.Create(this) ||
 		!m_wndStatusBar.SetIndicators(indicators,

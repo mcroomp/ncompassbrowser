@@ -1,0 +1,26 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+
+<html>
+
+<head>
+<title>Hello OLE Control</title>
+</head>
+
+<body bgcolor="#FFFFFF" text="#000000">
+
+<h2>Hello OLE Control</h2>
+
+<p>This page hosts <code>HelloOleControl.dll</code>, a tiny purpose-built
+ActiveX/OLE control (see <code>hello-ole-control/</code>) created specifically
+to demonstrate the browser's historic <code>&lt;xolecontrol&gt;</code> OLE
+hosting feature, exercised end-to-end through the browser's own original,
+unmodified <code>CControlItem</code> code (<code>win32/cntlitem.cpp</code>).</p>
+
+<p>The control's persisted state (<code>hello.olestate</code>) was generated
+with <code>ncompass-debug.exe --make-ole-state</code>.</p>
+
+<xolecontrol clsid="{3F2600F1-CF01-4618-BAC4-9A8AC30B8402}" src="hello.olestate" width="420" height="90" hspace="4" vspace="4">
+
+</body>
+
+</html>
