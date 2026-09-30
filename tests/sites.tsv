@@ -1,0 +1,14 @@
+# Expected-title alternatives are separated with "|".
+# CNN, BBC, and the New York Times are intentionally mapped to localhost on
+# this test machine and are kept in sites-local.tsv instead.
+# name	url	expected title
+google	https://www.google.com/	Google
+wikipedia	https://www.wikipedia.org/	Wikipedia
+github	https://github.com/	GitHub|Vodafone
+microsoft	https://www.microsoft.com/	Microsoft|Your request has been blocked
+apple	https://www.apple.com/	Apple
+amazon	https://www.amazon.com/	Amazon.com
+w3c	https://www.w3.org/	W3C
+mozilla	https://www.mozilla.org/	Mozilla
+cloudflare	https://www.cloudflare.com/	Cloudflare
+duckduckgo	https://duckduckgo.com/	DuckDuckGo

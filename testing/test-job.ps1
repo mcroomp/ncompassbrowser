@@ -4,11 +4,11 @@ param(
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
-$wrapper = Join-Path $root "$Configuration\ncompass-job.exe"
+$debugger = Join-Path $root "$Configuration\ncompass-debug.exe"
 $fixtures = Join-Path $root "tests\parser"
 
-if (-not (Test-Path $wrapper)) {
-    throw "Job wrapper not found: $wrapper"
+if (-not (Test-Path $debugger)) {
+    throw "Native harness not found: $debugger"
 }
 
 $listener = [System.Net.Sockets.TcpListener]::new(
@@ -18,10 +18,10 @@ $port = ([System.Net.IPEndPoint]$listener.LocalEndpoint).Port
 $listener.Stop()
 
 $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
-$startInfo.FileName = $wrapper
+$startInfo.FileName = $debugger
 $startInfo.UseShellExecute = $false
 foreach ($argument in @(
-    "--", "python", "-m", "http.server", "$port",
+    "--wrap", "--", "python", "-m", "http.server", "$port",
     "--bind", "127.0.0.1", "--directory", $fixtures)) {
     $startInfo.ArgumentList.Add($argument)
 }

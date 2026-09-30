@@ -3,19 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ncompass", "ncompass.vcxproj", "{0AC0D66A-7202-475C-BCE2-08A9C1CDE1D2}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ncompass-test", "ncompass-test.vcxproj", "{54C72DC1-575E-4C90-8ADF-AB735D39599D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ncompass-debug", "testing\ncompass-debug.vcxproj", "{C353104B-3975-4564-AEE5-AEDF21FD738D}"
 	ProjectSection(ProjectDependencies) = postProject
 		{0AC0D66A-7202-475C-BCE2-08A9C1CDE1D2} = {0AC0D66A-7202-475C-BCE2-08A9C1CDE1D2}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ncompass-debug", "ncompass-debug.vcxproj", "{C353104B-3975-4564-AEE5-AEDF21FD738D}"
-	ProjectSection(ProjectDependencies) = postProject
-		{0AC0D66A-7202-475C-BCE2-08A9C1CDE1D2} = {0AC0D66A-7202-475C-BCE2-08A9C1CDE1D2}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ncompass-parse", "ncompass-parse.vcxproj", "{8A8709ED-3047-42DB-B27A-927D3D2D8A6C}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ncompass-job", "ncompass-job.vcxproj", "{40AF53E8-7A9A-43F1-A46C-2E45E86DF6D1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ncompass-parse", "testing\ncompass-parse.vcxproj", "{8A8709ED-3047-42DB-B27A-927D3D2D8A6C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,10 +20,6 @@ Global
 		{0AC0D66A-7202-475C-BCE2-08A9C1CDE1D2}.Debug|Win32.Build.0 = Debug|Win32
 		{0AC0D66A-7202-475C-BCE2-08A9C1CDE1D2}.Release|Win32.ActiveCfg = Release|Win32
 		{0AC0D66A-7202-475C-BCE2-08A9C1CDE1D2}.Release|Win32.Build.0 = Release|Win32
-		{54C72DC1-575E-4C90-8ADF-AB735D39599D}.Debug|Win32.ActiveCfg = Debug|Win32
-		{54C72DC1-575E-4C90-8ADF-AB735D39599D}.Debug|Win32.Build.0 = Debug|Win32
-		{54C72DC1-575E-4C90-8ADF-AB735D39599D}.Release|Win32.ActiveCfg = Release|Win32
-		{54C72DC1-575E-4C90-8ADF-AB735D39599D}.Release|Win32.Build.0 = Release|Win32
 		{C353104B-3975-4564-AEE5-AEDF21FD738D}.Debug|Win32.ActiveCfg = Debug|Win32
 		{C353104B-3975-4564-AEE5-AEDF21FD738D}.Debug|Win32.Build.0 = Debug|Win32
 		{C353104B-3975-4564-AEE5-AEDF21FD738D}.Release|Win32.ActiveCfg = Release|Win32
@@ -39,10 +28,6 @@ Global
 		{8A8709ED-3047-42DB-B27A-927D3D2D8A6C}.Debug|Win32.Build.0 = Debug|Win32
 		{8A8709ED-3047-42DB-B27A-927D3D2D8A6C}.Release|Win32.ActiveCfg = Release|Win32
 		{8A8709ED-3047-42DB-B27A-927D3D2D8A6C}.Release|Win32.Build.0 = Release|Win32
-		{40AF53E8-7A9A-43F1-A46C-2E45E86DF6D1}.Debug|Win32.ActiveCfg = Debug|Win32
-		{40AF53E8-7A9A-43F1-A46C-2E45E86DF6D1}.Debug|Win32.Build.0 = Debug|Win32
-		{40AF53E8-7A9A-43F1-A46C-2E45E86DF6D1}.Release|Win32.ActiveCfg = Release|Win32
-		{40AF53E8-7A9A-43F1-A46C-2E45E86DF6D1}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

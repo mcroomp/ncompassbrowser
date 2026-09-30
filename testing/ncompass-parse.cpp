@@ -2,10 +2,14 @@
 
 #include "readhtml.h"
 
+#include <atomic>
 #include <fstream>
 #include <iostream>
+#include <thread>
 #include <string>
 #include <vector>
+
+#include <wininet.h>
 
 
 class CParserHarness : public CParseHTML
@@ -26,6 +30,206 @@ public:
 		return OnEndOfFile();
 		}
 	};
+
+
+class CInternetHandle
+	{
+public:
+	CInternetHandle(HINTERNET handle = NULL) : handle_(handle)
+		{
+		}
+
+	~CInternetHandle()
+		{
+		if (handle_)
+			InternetCloseHandle(handle_);
+		}
+
+	operator HINTERNET() const
+		{
+		return handle_;
+		}
+
+private:
+	HINTERNET handle_;
+	};
+
+
+bool FetchUrl(const char *url, DWORD timeout_ms, std::vector<BYTE>& body)
+	{
+	CInternetHandle session(InternetOpenA("NCompass Version 1A2",
+		INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0));
+	if (!session)
+		return false;
+
+	DWORD retries = 0;
+	if (!InternetSetOption(session, INTERNET_OPTION_CONNECT_TIMEOUT,
+			&timeout_ms, sizeof(timeout_ms)) ||
+		!InternetSetOption(session, INTERNET_OPTION_RECEIVE_TIMEOUT,
+			&timeout_ms, sizeof(timeout_ms)) ||
+		!InternetSetOption(session, INTERNET_OPTION_SEND_TIMEOUT,
+			&timeout_ms, sizeof(timeout_ms)) ||
+		!InternetSetOption(session, INTERNET_OPTION_CONNECT_RETRIES,
+			&retries, sizeof(retries)))
+		return false;
+
+	const char headers[] = "Accept-Encoding: identity\r\n";
+	CInternetHandle request(InternetOpenUrlA(session, url, headers,
+		static_cast<DWORD>(strlen(headers)),
+		INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE |
+			INTERNET_FLAG_PRAGMA_NOCACHE, 0));
+	if (!request)
+		return false;
+
+	DWORD status = 0;
+	DWORD status_size = sizeof(status);
+	DWORD index = 0;
+	if (!HttpQueryInfoA(request,
+			HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER,
+			&status, &status_size, &index) ||
+		status < 200 || status > 299)
+		return false;
+
+	BYTE buffer[65536];
+	for (;;)
+		{
+		DWORD amount = 0;
+		if (!InternetReadFile(request, buffer, sizeof(buffer), &amount))
+			return false;
+		if (!amount)
+			break;
+		if (body.size() + amount > 16 * 1024 * 1024)
+			return false;
+		body.insert(body.end(), buffer, buffer + amount);
+		}
+	return true;
+	}
+
+
+UINT64 HashBytes(UINT64 hash, const void *data, size_t length)
+	{
+	const BYTE *bytes = static_cast<const BYTE *>(data);
+	for (size_t i = 0; i < length; i++)
+		{
+		hash ^= bytes[i];
+		hash *= 1099511628211ULL;
+		}
+	return hash;
+	}
+
+
+struct ParseFingerprint
+	{
+	LOAD_STATE state;
+	UINT64 hash;
+	size_t tags;
+
+	bool operator==(const ParseFingerprint& other) const
+		{
+		return state == other.state && hash == other.hash &&
+			tags == other.tags;
+		}
+	};
+
+
+ParseFingerprint ParseBytes(const std::vector<BYTE>& body, LPCSTR url,
+	size_t chunk_size)
+	{
+	CParserHarness parser(url);
+	LOAD_STATE state = LOAD_STATE_LOADING;
+	for (size_t offset = 0;
+		offset < body.size() && state == LOAD_STATE_LOADING;
+		offset += chunk_size)
+		{
+		size_t amount = min(chunk_size, body.size() - offset);
+		state = parser.Feed(body.data() + offset,
+			static_cast<INT32>(amount));
+		}
+	if (state == LOAD_STATE_LOADING)
+		state = parser.Finish();
+
+	parser.DEBUG_LOCK();
+	CString title = parser.GetTitle();
+	CBigString plain_text = parser.GetPlainText();
+	CString plain;
+	plain_text.GetString(plain, 0, plain_text.GetLength());
+	UINT64 hash = 1469598103934665603ULL;
+	hash = HashBytes(hash, static_cast<LPCSTR>(title), title.GetLength());
+	hash = HashBytes(hash, static_cast<LPCSTR>(plain), plain.GetLength());
+	INT32 colors[] = {
+		parser.GetBackgroundColor(),
+		parser.GetTextColor(),
+		parser.GetHotlinkColor(),
+		parser.GetOldHotlinkColor()
+		};
+	hash = HashBytes(hash, colors, sizeof(colors));
+	CString background_picture = parser.GetBackgroundPicture();
+	hash = HashBytes(hash, static_cast<LPCSTR>(background_picture),
+		background_picture.GetLength());
+	size_t tags = 0;
+	POSITION walk = parser.GetFirstTagPos();
+	while(walk)
+		{
+		const CTag *tag = parser.GetNextTag(walk);
+		if ((tag->m_type & ~TAG_END) != TAG_TEXT)
+			{
+			hash = HashBytes(hash, &tag->m_type, sizeof(tag->m_type));
+			tags++;
+			}
+		}
+	parser.Unlock();
+	return { state, hash, tags };
+	}
+
+
+int StressUrl(const char *url, int iterations, int parallel,
+	DWORD timeout_ms)
+	{
+	std::vector<BYTE> body;
+	if (!FetchUrl(url, timeout_ms, body))
+		{
+		std::cerr << "URL fetch failed with error " << GetLastError()
+			<< "\n";
+		return 1;
+		}
+
+	static const size_t chunk_sizes[] = { 1, 2, 7, 31, 4096 };
+	std::vector<ParseFingerprint> results(iterations);
+	std::atomic<int> next(0);
+	std::vector<std::thread> workers;
+	for (int worker = 0; worker < parallel; worker++)
+		{
+		workers.emplace_back([&]()
+			{
+			for (;;)
+				{
+				int iteration = next.fetch_add(1);
+				if (iteration >= iterations)
+					break;
+				results[iteration] = ParseBytes(body, url,
+					chunk_sizes[iteration % _countof(chunk_sizes)]);
+				}
+			});
+		}
+	for (std::thread& worker : workers)
+		worker.join();
+
+	for (int iteration = 0; iteration < iterations; iteration++)
+		{
+		if (results[iteration].state != LOAD_STATE_COMPLETE ||
+			!(results[iteration] == results[0]))
+			{
+			std::cerr << "Parser divergence at iteration "
+				<< iteration << "\n";
+			return 1;
+			}
+		}
+
+	std::cout << "PASS: " << body.size() << " bytes, " << iterations
+		<< " parses, " << parallel << " workers, " << results[0].tags
+		<< " tags, hash " << results[0].hash << "\n";
+	return 0;
+	}
 
 
 void WriteJsonString(std::ostream& output, LPCSTR text, int length)
@@ -171,6 +375,25 @@ void WriteTag(std::ostream& output, const CTag *tag,
 
 int main(int argc, char *argv[])
 	{
+	if (argc >= 3 && argc <= 6 && strcmp(argv[1], "--stress-url") == 0)
+		{
+		int iterations = argc >= 4 ? atoi(argv[3]) : 20;
+		int parallel = argc >= 5 ? atoi(argv[4]) : 4;
+		DWORD timeout_ms = argc >= 6 ?
+			static_cast<DWORD>(strtoul(argv[5], NULL, 10)) : 1000;
+		if (iterations <= 0 || parallel <= 0 || !timeout_ms)
+			{
+			std::cerr << "iterations, parallel, and timeout-ms must be positive\n";
+			return 2;
+			}
+		if (!AfxWinInit(GetModuleHandle(NULL), NULL, GetCommandLineA(), 0))
+			{
+			std::cerr << "Could not initialize MFC\n";
+			return 2;
+			}
+		return StressUrl(argv[2], iterations, parallel, timeout_ms);
+		}
+
 	if (argc < 2 || argc > 4)
 		{
 		std::cerr << "Usage: ncompass-parse <html-file> "
