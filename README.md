@@ -1,5 +1,12 @@
 # Ncompass
 
+> ⚠️ **Historical/educational software only — do not browse the live web
+> with it.** This browser hosts arbitrary native OLE/ActiveX controls with
+> no sandboxing, no modern TLS/certificate hardening, and none of the last
+> ~30 years of browser security work. Treat it the same way you'd treat any
+> other unpatched 1996 Windows binary: run it against local files or
+> content you trust completely, not the public internet.
+
 Ncompass is the circa-1996 web browser originally shipped by **NCompass Labs
 Inc.**, a Vancouver company. It was the **first browser to host OLE
 controls embedded directly in HTML pages** — the technology Microsoft would
@@ -33,6 +40,13 @@ form as possible.
 The screenshot above is the browser built from this repository rendering
 [website/index.html](website/index.html) — a curated copy of NCompass Labs'
 own real 1996 homepage.
+
+Since no original CaptiveX controls (NCompass's own ActiveX control pack)
+survive anywhere, this repository also includes a tiny modern reproduction,
+[hello-ole-control/](hello-ole-control/) — a from-scratch OLE control built
+just to demonstrate the browser's `<xolecontrol>` hosting feature working
+end to end, unmodified, against a real registered COM object. See
+[hello-ole-control/README](#hello-ole-control-demo) below.
 
 ## What's in this repository
 
@@ -73,13 +87,19 @@ mac/         The original Macintosh browser this project was ported from.
 website/     Curated copy of the real 1996 NCompass Labs homepage and its
              image assets — a small, self-contained, period-accurate page
              used to exercise and screenshot the restored browser.
+hello-ole-control/
+             A tiny modern ActiveX/OLE control (ATL) used to demonstrate
+             the browser's <xolecontrol> hosting feature end to end; not
+             part of the historical codebase. See "Hello OLE control demo"
+             below.
 testing/     Modern C++17 test harness and PowerShell scripts. Fully
              independent of the historical code; see BUILDING.md.
 tests/       Fixtures and manifests used by the harness (parser test HTML,
              multi-site regression lists).
 ncompass.sln / ncompass.vcxproj
-             The historical browser's build. testing/ncompass-debug.vcxproj
-             and testing/ncompass-parse.vcxproj are the modern tools' builds.
+             The historical browser's build. testing/ncompass-debug.vcxproj,
+             testing/ncompass-parse.vcxproj, and hello-ole-control's own
+             .vcxproj are the modern/demo tools' builds.
 ```
 
 ## Architecture
@@ -159,6 +179,43 @@ See [BUILDING.md](BUILDING.md) for full instructions, including:
   browser's real parser directly, for chunk-boundary and concurrency
   testing without any UI.
 - The PowerShell regression scripts under `testing/`.
+
+## Hello OLE control demo
+
+![HelloOleControl.dll rendering inside the restored browser](hello-ole-control/screenshot.png)
+
+[hello-ole-control/](hello-ole-control/) is a minimal ActiveX/OLE control
+(an in-process COM DLL, built with ATL) whose only job is to paint "Hi I'm
+an OLE Control running in the browser!" It exists to prove out the
+browser's `<xolecontrol>` hosting feature (`win32/cntlitem.cpp`) against a
+real, registered COM object, without depending on any long-vanished
+CaptiveX control or fighting version/bitness mismatches against today's
+built-in Windows OCXes.
+
+The control is loaded through the browser's original, unmodified
+persisted-storage path — the same `CControlItem::OpenStorage` /
+`CreateItemFromStorage` code a real CaptiveX control would have used in
+1996 — via `<xolecontrol clsid="..." src="hello.olestate">`
+(`tests/parser/hello-ole-control-demo.html`). The `.olestate` file is a
+real OLE compound-file, generated with
+`ncompass-debug.exe --make-ole-state`.
+
+To build and try it yourself:
+
+1. Build the `HelloOleControl` project (part of `ncompass.sln`); it lands
+   next to the browser as `Debug\HelloOleControl.dll`.
+2. Register it — no admin rights required, since it self-registers under
+   `HKEY_CURRENT_USER`:
+   ```
+   regsvr32 Debug\HelloOleControl.dll
+   ```
+   (use the 32-bit `regsvr32` at `%WINDIR%\SysWOW64\regsvr32.exe`, since
+   both the control and the browser are 32-bit.)
+3. Generate the persisted state and open the demo page:
+   ```
+   ncompass-debug.exe --make-ole-state {3F2600F1-CF01-4618-BAC4-9A8AC30B8402} tests\parser\hello.olestate
+   ncompass.exe tests\parser\hello-ole-control-demo.html
+   ```
 
 ## Original authors
 

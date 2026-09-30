@@ -6,7 +6,8 @@ the original HTML, networking, image, OLE, and ActiveX-control code paths.
 ## Requirements
 
 - Visual Studio 2022 with the **Desktop development with C++** workload
-- **C++ MFC for latest v143 build tools (x86 & x64)**
+- **C++ MFC for latest v143 build tools (x86 & x64)** (this component also
+  includes the ATL headers/libs used to build `hello-ole-control`)
 - A Windows 10 or Windows 11 SDK
 
 The MFC component can be selected from the Visual Studio Installer under
@@ -34,8 +35,11 @@ executables:
 ## Build
 
 Open `ncompass.sln` in Visual Studio 2022 and build either `Debug|Win32` or
-`Release|Win32`. It has three projects: `ncompass` (the browser, at the
-repository root), and `ncompass-debug`/`ncompass-parse` (under `testing\`).
+`Release|Win32`. It has four projects: `ncompass` (the browser, at the
+repository root), `ncompass-debug`/`ncompass-parse` (under `testing\`), and
+`HelloOleControl` (under `hello-ole-control\`, a small demo ActiveX control
+used to exercise `<xolecontrol>` hosting — see the "Hello OLE control demo"
+section in [README.md](README.md)).
 
 From a Visual Studio Developer PowerShell:
 
