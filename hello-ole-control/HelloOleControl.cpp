@@ -58,9 +58,11 @@ class ATL_NO_VTABLE CHelloControl :
 	public IPersistStorageImpl<CHelloControl>
 {
 public:
-	CHelloControl()
+	CHelloControl() : m_flipped(FALSE)
 	{
 	}
+
+	BOOL m_flipped;
 
 	DECLARE_NO_REGISTRY()
 	DECLARE_NOT_AGGREGATABLE(CHelloControl)
@@ -92,9 +94,22 @@ public:
 	END_COM_MAP()
 
 	BEGIN_MSG_MAP(CHelloControl)
+		MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
 		CHAIN_MSG_MAP(CComControl<CHelloControl>)
 		DEFAULT_REFLECTION_HANDLER()
 	END_MSG_MAP()
+
+	// Proves the control is genuinely live (a real, message-routed child
+	// window) rather than a static bitmap: a click flips the background
+	// color and repaints immediately.
+	LRESULT OnLButtonDown(UINT, WPARAM, LPARAM, BOOL& bHandled)
+	{
+		m_flipped = !m_flipped;
+		FireViewChange();
+		InvalidateRect(NULL, TRUE);
+		bHandled = TRUE;
+		return 0;
+	}
 
 	// Paints the control. Called both for on-screen (in-place active)
 	// rendering and for any static/metafile rendering the container asks for.
@@ -103,13 +118,23 @@ public:
 		HDC hdc = di.hdcDraw;
 		const RECT& rc = *(const RECT*)di.prcBounds;
 
-		::FillRect(hdc, &rc, (HBRUSH)(COLOR_BTNFACE + 1));
+		if (m_flipped)
+			{
+			HBRUSH hBrush = ::CreateSolidBrush(RGB(0xFF, 0xD8, 0x40));
+			::FillRect(hdc, &rc, hBrush);
+			::DeleteObject(hBrush);
+			}
+		else
+			{
+			::FillRect(hdc, &rc, (HBRUSH)(COLOR_BTNFACE + 1));
+			}
 		::FrameRect(hdc, &rc, (HBRUSH)::GetStockObject(BLACK_BRUSH));
 
 		::SetBkMode(hdc, TRANSPARENT);
 		::SetTextColor(hdc, RGB(0, 0, 0x80));
 
-		static const char szText[] = "Hi I'm an OLE Control running in the browser!";
+		static const char szText[] =
+			"Hi I'm an OLE Control running in the browser!\n(Click on me!)";
 		RECT rcText = rc;
 		::InflateRect(&rcText, -8, -8);
 		::DrawTextA(hdc, szText, -1, &rcText,

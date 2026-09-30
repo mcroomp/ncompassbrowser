@@ -183,14 +183,17 @@ See [BUILDING.md](BUILDING.md) for full instructions, including:
 ## Hello OLE control demo
 
 ![HelloOleControl.dll rendering inside the restored browser](hello-ole-control/screenshot.png)
+![Clicking the control flips its background color](hello-ole-control/screenshot-clicked.png)
 
 [hello-ole-control/](hello-ole-control/) is a minimal ActiveX/OLE control
 (an in-process COM DLL, built with ATL) whose only job is to paint "Hi I'm
-an OLE Control running in the browser!" It exists to prove out the
-browser's `<xolecontrol>` hosting feature (`win32/cntlitem.cpp`) against a
-real, registered COM object, without depending on any long-vanished
-CaptiveX control or fighting version/bitness mismatches against today's
-built-in Windows OCXes.
+an OLE Control running in the browser!" and, to prove it's a genuinely
+live, message-routed control rather than a static image, flip its
+background color when clicked. It exists to prove out the browser's
+`<xolecontrol>` hosting feature (`win32/cntlitem.cpp`) against a real,
+registered COM object, without depending on any long-vanished CaptiveX
+control or fighting version/bitness mismatches against today's built-in
+Windows OCXes.
 
 The control is loaded through the browser's original, unmodified
 persisted-storage path — the same `CControlItem::OpenStorage` /
