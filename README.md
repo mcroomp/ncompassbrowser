@@ -32,7 +32,7 @@ historic artifact of the lab that preceded it, never released beyond an
 early alpha (an installer, `nc1a21g.exe`, survives on
 [archive.org](https://archive.org/)).
 
-It was, as far as we can tell, still the **first browser to host OLE
+It was still the **first browser to host OLE
 controls embedded directly in HTML pages** — the technology Microsoft
 would soon rebrand and popularize as **ActiveX**. The idea was essentially
 **"Visual Basic for the web"**: VB's whole appeal was assembling an
@@ -59,7 +59,7 @@ The screenshot above is the browser built from this repository rendering
 [website/index.html](website/index.html) — a curated copy of NCompass Labs'
 own real 1996 homepage.
 
-Since no original CaptiveX controls survive anywhere — NCompass Labs'
+Since we have not yet located CaptiveX controls anywhere — NCompass Labs'
 shipped suite of ActiveX controls, meant to run natively in Internet
 Explorer or via the company's own ScriptActive plugin in Netscape, not
 tied to this unreleased browser — this repository also includes a tiny
