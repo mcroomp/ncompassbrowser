@@ -1,4 +1,4 @@
-# Ncompass
+# NCompass
 
 > ⚠️ **Historical/educational software only — do not browse the live web
 > with it unless you are in a throw-away virtual machine.** This browser hosts arbitrary native OLE/ActiveX controls with
@@ -18,18 +18,19 @@ renderer (`cross_p/`, [Original authors](#original-authors) below) was
 ported to Win32 and became this browser's rendering core instead.
 
 By the time **NCompass Labs Inc.** was spun out of the lab in 1996, the
-decision had already been made to abandon the standalone browser as a
-product: Netscape had introduced its **NPAPI** plugin architecture, and it
-made more sense to ship the OLE/ActiveX-control-hosting technology as a
-Netscape Navigator plugin — **ScriptActive** (which let Netscape host
-ActiveX controls at all) and **DocActive** (Office documents) — than to
-compete as a whole separate browser. The company's other product,
-**CaptiveX**, was a suite of ActiveX controls in its own right, designed to
-run natively in Internet Explorer or, via ScriptActive, inside Netscape
-too. As a result, Ncompass itself was never released as a finished
-commercial product; it got only as far as an early alpha (an installer,
-`nc1a21g.exe`, survives on [archive.org](https://archive.org/)) before the
-company's efforts moved fully to the plugin products.
+decision to abandon the standalone browser had already been made: Netscape
+had introduced its **NPAPI** plugin architecture, and it made more sense to
+ship the OLE/ActiveX-control-hosting technology as a Netscape Navigator
+plugin — **ScriptActive** (which let Netscape host ActiveX controls at
+all) and **DocActive** (Office documents) — than to compete as a whole
+separate browser. The company also shipped **CaptiveX**, a suite of
+ActiveX controls in its own right, designed to run natively in Internet
+Explorer or, via ScriptActive, inside Netscape too. This browser was never
+actually part of NCompass Labs Inc.'s product lineup at all: the decision
+to abandon it predates the company itself, so it survives only as a
+historic artifact of the lab that preceded it, never released beyond an
+early alpha (an installer, `nc1a21g.exe`, survives on
+[archive.org](https://archive.org/)).
 
 It was, as far as we can tell, still the **first browser to host OLE
 controls embedded directly in HTML pages** — the technology Microsoft
@@ -52,7 +53,7 @@ runs reliably on modern 64-bit Windows with Visual Studio 2022, while
 keeping the historical browser code itself as close to its original 1995
 form as possible.
 
-![Ncompass rendering the restored NCompass Labs 1996 homepage](website/screenshot.png)
+![NCompass rendering the restored NCompass Labs 1996 homepage](website/screenshot.png)
 
 The screenshot above is the browser built from this repository rendering
 [website/index.html](website/index.html) — a curated copy of NCompass Labs'
@@ -202,7 +203,7 @@ See [BUILDING.md](BUILDING.md) for full instructions, including:
 
 ## How `<xolecontrol>` worked, before there was a standard
 
-Ncompass predates the `<OBJECT>` tag that Microsoft and the W3C would later
+NCompass predates the `<OBJECT>` tag that Microsoft and the W3C would later
 standardize for embedding ActiveX controls (and everything else) in HTML.
 Its own tag for this, `<xolecontrol>` (`STR_OLECONTROL` in
 [cross_p/readhtml.cpp](cross_p/readhtml.cpp)), is a much more ad hoc affair
@@ -307,7 +308,7 @@ To build and try it yourself:
 
 ## Original authors
 
-The original Ncompass browser was built at Simon Fraser University's
+The original NCompass browser was built at Simon Fraser University's
 ExCITE lab by **Kristof Roomp**, along with **Kerem Karatal**, who worked
 on the OLE container. Its HTML renderer (`cross_p/`) began life in an
 earlier Macintosh browser and was then ported to Win32, which is why the
