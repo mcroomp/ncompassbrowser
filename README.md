@@ -1,27 +1,42 @@
 # Ncompass
 
 > ⚠️ **Historical/educational software only — do not browse the live web
-> with it.** This browser hosts arbitrary native OLE/ActiveX controls with
+> with it unless you are in a throw-away virtual machine.** This browser hosts arbitrary native OLE/ActiveX controls with
 > no sandboxing, no modern TLS/certificate hardening, and none of the last
 > ~30 years of browser security work. Treat it the same way you'd treat any
-> other unpatched 1996 Windows binary: run it against local files or
-> content you trust completely, not the public internet.
+> other unpatched 1995 Windows binary.
 
-Ncompass is the circa-1996 web browser originally shipped by **NCompass Labs
-Inc.**, a Vancouver company. It was the **first browser to host OLE
-controls embedded directly in HTML pages** — the technology Microsoft would
-soon rebrand and popularize as **ActiveX**. The idea was essentially
+Ncompass began as a research prototype at Simon Fraser University's
+**ExCITE lab** — a name still visible in the code today, since the
+browser's own settings are stored under the registry key
+`Software\ExCITE\Ncompass`. The lab had first looked at licensing NCSA
+Mosaic to build on, but it was too expensive; it happened to already have
+an HTML viewer written for the Macintosh for a different project, so that
+renderer (`cross_p/`, [Original authors](#original-authors) below) was
+ported to Win32 and became this browser's rendering core instead.
+
+By the time **NCompass Labs Inc.** was spun out of the lab in 1996, the
+decision had already been made to abandon the standalone browser as a
+product: Netscape had introduced its **NPAPI** plugin architecture, and it
+made more sense to ship the OLE/ActiveX-control-hosting technology as a
+Netscape Navigator plugin — **ScriptActive** (which let Netscape host
+ActiveX controls at all) and **DocActive** (Office documents) — than to
+compete as a whole separate browser. The company's other product,
+**CaptiveX**, was a suite of ActiveX controls in its own right, designed to
+run natively in Internet Explorer or, via ScriptActive, inside Netscape
+too. As a result, Ncompass itself was never released as a finished
+commercial product; it got only as far as an early alpha (an installer,
+`nc1a21g.exe`, survives on [archive.org](https://archive.org/)) before the
+company's efforts moved fully to the plugin products.
+
+It was, as far as we can tell, still the **first browser to host OLE
+controls embedded directly in HTML pages** — the technology Microsoft
+would soon rebrand and popularize as **ActiveX**. The idea was essentially
 **"Visual Basic for the web"**: VB's whole appeal was assembling an
 application out of pre-built VBX/OLE controls from a large existing
 third-party ecosystem, and the browser was meant to become just another
 container for those same controls — a web page as a VB form, dropping in
-components that already existed rather than reinventing them in HTML. Once
-ActiveX control hosting shipped natively in Internet Explorer, there was no
-longer a reason for a whole standalone browser built around that one
-feature: NCompass pivoted its technology into browser plug-ins instead —
-**ScriptActive** and **DocActive**, which hosted ActiveX controls and Office
-documents inside Netscape Navigator — and this browser, Ncompass, was
-discontinued.
+components that already existed rather than reinventing them in HTML.
 
 In hindsight, letting a web page instantiate and host an arbitrary native
 COM object — full access to the OS, the filesystem, the registry, no
@@ -32,7 +47,7 @@ like exactly the right way to make the web programmable.
 
 This repository restores the original MFC/Win32 C++ source so it builds and
 runs reliably on modern 64-bit Windows with Visual Studio 2022, while
-keeping the historical browser code itself as close to its original 1996
+keeping the historical browser code itself as close to its original 1995
 form as possible.
 
 ![Ncompass rendering the restored NCompass Labs 1996 homepage](website/screenshot.png)
@@ -41,18 +56,21 @@ The screenshot above is the browser built from this repository rendering
 [website/index.html](website/index.html) — a curated copy of NCompass Labs'
 own real 1996 homepage.
 
-Since no original CaptiveX controls (NCompass's own ActiveX control pack)
-survive anywhere, this repository also includes a tiny modern reproduction,
-[hello-ole-control/](hello-ole-control/) — a from-scratch OLE control built
-just to demonstrate the browser's `<xolecontrol>` hosting feature working
-end to end, unmodified, against a real registered COM object. See
-[hello-ole-control/README](#hello-ole-control-demo) below.
+Since no original CaptiveX controls survive anywhere — NCompass Labs'
+shipped suite of ActiveX controls, meant to run natively in Internet
+Explorer or via the company's own ScriptActive plugin in Netscape, not
+tied to this unreleased browser — this repository also includes a tiny
+modern reproduction, [hello-ole-control/](hello-ole-control/) — a
+from-scratch OLE control built just to demonstrate the browser's
+`<xolecontrol>` hosting feature working end to end, unmodified, against a
+real registered COM object. See [hello-ole-control/README](#hello-ole-control-demo)
+below.
 
 ## What's in this repository
 
 - The **original historical browser source**, built with a fully modern
   toolchain (Visual Studio 2022, MSVC v143, MSBuild `.sln`/`.vcxproj`) rather
-  than its original 1996 one (Microsoft Visual C++ 4.x's "Developer Studio,"
+  than its original 1995 one (Microsoft Visual C++ 4.x's "Developer Studio,"
   which used `.mak`/`.dsp`/`.dsw` project files — "Visual Studio" as a brand
   didn't exist until 1997). Only the `.cpp`/`.h` source is historical; the
   project files, compiler, and IDE are all deliberately current, with only
@@ -164,7 +182,7 @@ so on) instead of adding hooks for automation's sake.
 The result is that the historical browser's diff against the originally
 imported source stays as small and legible as the actual requirements
 allow — it should always be possible to tell, file by file, exactly why a
-change to the 1996 code was necessary.
+change to the 1995 code was necessary.
 
 ## Building and testing
 
@@ -262,7 +280,7 @@ Windows OCXes.
 The control is loaded through the browser's original, unmodified
 persisted-storage path — the same `CControlItem::OpenStorage` /
 `CreateItemFromStorage` code a real CaptiveX control would have used in
-1996 — via `<xolecontrol clsid="..." src="hello.olestate">`
+1995 — via `<xolecontrol clsid="..." src="hello.olestate">`
 (`tests/parser/hello-ole-control-demo.html`). The `.olestate` file is a
 real OLE compound-file, generated with
 `ncompass-debug.exe --make-ole-state`.
@@ -287,15 +305,16 @@ To build and try it yourself:
 
 ## Original authors
 
-The original 1996 Ncompass browser was built by **Kristof Roomp**, along
-with **Kerem Karatal**, who worked on the OLE container. Its HTML renderer
-(`cross_p/`) began life in an earlier Macintosh browser and was then ported
-to Win32, which is why the portable core and the Win32-specific UI/OLE code
-still live in separate directories today.
+The original Ncompass browser was built at Simon Fraser University's
+ExCITE lab by **Kristof Roomp**, along with **Kerem Karatal**, who worked
+on the OLE container. Its HTML renderer (`cross_p/`) began life in an
+earlier Macintosh browser and was then ported to Win32, which is why the
+portable core and the Win32-specific UI/OLE code still live in separate
+directories today.
 
 ## Acknowledgments
 
-Reviving this 1996 codebase on a modern OS — diagnosing and fixing the
+Reviving this 1995 codebase on a modern OS — diagnosing and fixing the
 crashes, races, and hangs that kept it from running at all — was done with
 the help of an AI assistant (Copilot SDK, in VS Code).
 
