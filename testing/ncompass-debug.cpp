@@ -2,6 +2,8 @@
 #include <dbghelp.h>
 #include <tlhelp32.h>
 #include <wininet.h>
+#include <ole2.h>
+#include <winver.h>
 
 #include <algorithm>
 #include <filesystem>
@@ -440,6 +442,256 @@ cleanup:
 		InternetCloseHandle(session);
 	if (result != 0)
 		DeleteFileW(output_path);
+	return result;
+	}
+
+
+// Writes a CString in the exact byte format MFC's CArchive uses
+// (CArchive::WriteCount followed by the raw bytes), so the historical
+// CControlItem::OpenStorage's `ar >> CString` calls can read it back
+// without knowing this file was never written by MFC at all.
+void WriteMfcString(std::ofstream& out, const std::string& text)
+	{
+	size_t length = text.size();
+	if (length < 0xff)
+		{
+		BYTE count = static_cast<BYTE>(length);
+		out.write(reinterpret_cast<const char *>(&count), sizeof(count));
+		}
+	else if (length < 0xffff)
+		{
+		BYTE marker = 0xff;
+		WORD count = static_cast<WORD>(length);
+		out.write(reinterpret_cast<const char *>(&marker), sizeof(marker));
+		out.write(reinterpret_cast<const char *>(&count), sizeof(count));
+		}
+	else
+		{
+		BYTE marker = 0xff;
+		WORD wide_marker = 0xffff;
+		DWORD count = static_cast<DWORD>(length);
+		out.write(reinterpret_cast<const char *>(&marker), sizeof(marker));
+		out.write(reinterpret_cast<const char *>(&wide_marker),
+			sizeof(wide_marker));
+		out.write(reinterpret_cast<const char *>(&count), sizeof(count));
+		}
+	if (length)
+		out.write(text.data(), length);
+	}
+
+
+// Builds an .olestate file usable as an <xolecontrol olesrc="..."> source:
+// a real OLE object of the given CLSID is instantiated, told to persist its
+// freshly-initialized state into a brand-new IStorage backed by an
+// in-memory ILockBytes, and the resulting compound-file bytes are written
+// out after the same small MFC-CArchive-serialized OCXINFO header that
+// CControlItem::OpenStorage (win32/cntlitem.cpp, unmodified historical
+// code) already expects to read. This exercises the browser's original
+// persisted-storage load path instead of adding a new one.
+// Mirrors CControlItem::GetVersionInfo() in win32/cntlitem.cpp exactly, so
+// the ProductVersion string we persist here will match what the browser's
+// CheckIfLocalOCX() computes from the currently-registered control's binary
+// at load time (it requires an exact string match before it will treat the
+// control as "locally available").
+std::string GetOcxProductVersion(const wchar_t *clsid_text)
+	{
+	CLSID clsid;
+	if (FAILED(CLSIDFromString(clsid_text, &clsid)))
+		return "";
+
+	LPOLESTR clsid_str = NULL;
+	if (FAILED(StringFromCLSID(clsid, &clsid_str)))
+		return "";
+	std::wstring key_path = std::wstring(L"CLSID\\") + clsid_str
+		+ L"\\InprocServer32";
+	CoTaskMemFree(clsid_str);
+
+	wchar_t dll_path[MAX_PATH * 2] = {0};
+	DWORD size = sizeof(dll_path);
+	if (RegGetValueW(HKEY_CLASSES_ROOT, key_path.c_str(), NULL,
+		RRF_RT_REG_SZ, NULL, dll_path, &size) != ERROR_SUCCESS)
+		return "";
+
+	DWORD handle = 0;
+	DWORD info_size = GetFileVersionInfoSizeW(dll_path, &handle);
+	if (info_size == 0)
+		return "";
+
+	std::vector<BYTE> data(info_size);
+	if (!GetFileVersionInfoW(dll_path, handle, info_size, data.data()))
+		return "";
+
+	struct LANGANDCODEPAGE { WORD language; WORD codepage; } *translations;
+	UINT translations_size = 0;
+	if (!VerQueryValueW(data.data(), L"\\VarFileInfo\\Translation",
+		reinterpret_cast<LPVOID *>(&translations), &translations_size)
+		|| translations_size < sizeof(LANGANDCODEPAGE))
+		return "";
+
+	wchar_t sub_block[64];
+	swprintf_s(sub_block, L"\\StringFileInfo\\%04X%04X\\ProductVersion",
+		translations[0].language, translations[0].codepage);
+
+	wchar_t *version = NULL;
+	UINT version_size = 0;
+	if (!VerQueryValueW(data.data(), sub_block,
+		reinterpret_cast<LPVOID *>(&version), &version_size) || !version)
+		return "";
+
+	int narrow_size = WideCharToMultiByte(CP_ACP, 0, version, -1, NULL, 0,
+		NULL, NULL);
+	std::string result(narrow_size > 0 ? narrow_size - 1 : 0, '\0');
+	if (narrow_size > 0)
+		WideCharToMultiByte(CP_ACP, 0, version, -1, result.data(),
+			narrow_size, NULL, NULL);
+	return result;
+	}
+
+int MakeOleState(const wchar_t *clsid_text, const wchar_t *output_path)
+	{
+	CLSID clsid;
+	HRESULT hr = CLSIDFromString(clsid_text, &clsid);
+	if (FAILED(hr))
+		{
+		std::wcerr << L"Not a valid CLSID: " << clsid_text << L"\n";
+		return 1;
+		}
+
+	hr = OleInitialize(NULL);
+	if (FAILED(hr))
+		{
+		std::wcerr << L"OleInitialize failed: 0x" << std::hex << hr << L"\n";
+		return 1;
+		}
+
+	int result = 1;
+	ILockBytes *lock_bytes = NULL;
+	IStorage *storage = NULL;
+	IOleObject *ole_object = NULL;
+	IPersistStorage *persist = NULL;
+
+	hr = CreateILockBytesOnHGlobal(NULL, TRUE, &lock_bytes);
+	if (FAILED(hr))
+		{
+		std::wcerr << L"CreateILockBytesOnHGlobal failed: 0x" << std::hex
+			<< hr << L"\n";
+		goto cleanup;
+		}
+
+	hr = StgCreateDocfileOnILockBytes(lock_bytes,
+		STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, &storage);
+	if (FAILED(hr))
+		{
+		std::wcerr << L"StgCreateDocfileOnILockBytes failed: 0x" << std::hex
+			<< hr << L"\n";
+		goto cleanup;
+		}
+
+	// OleCreate() would normally stamp the storage's root class ID itself;
+	// since we build the object manually (for clearer diagnostics) we must
+	// do it ourselves, or OleLoad() will later read back CLSID_NULL and
+	// fail to activate the object with "Class not registered".
+	hr = WriteClassStg(storage, clsid);
+	if (FAILED(hr))
+		{
+		std::wcerr << L"WriteClassStg failed: 0x" << std::hex << hr << L"\n";
+		goto cleanup;
+		}
+
+	hr = CoCreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER, IID_IOleObject,
+		reinterpret_cast<LPVOID *>(&ole_object));
+	if (FAILED(hr))
+		{
+		std::wcerr << L"CoCreateInstance failed for " << clsid_text
+			<< L": 0x" << std::hex << hr << L"\n";
+		goto cleanup;
+		}
+
+	OleSetContainedObject(ole_object, TRUE);
+
+	hr = ole_object->QueryInterface(IID_IPersistStorage,
+		reinterpret_cast<LPVOID *>(&persist));
+	if (FAILED(hr))
+		{
+		std::wcerr << L"QueryInterface(IPersistStorage) failed: 0x"
+			<< std::hex << hr << L"\n";
+		goto cleanup;
+		}
+
+	hr = persist->InitNew(storage);
+	if (FAILED(hr))
+		{
+		std::wcerr << L"IPersistStorage::InitNew failed: 0x" << std::hex
+			<< hr << L"\n";
+		goto cleanup;
+		}
+
+	hr = persist->Save(storage, FALSE);
+	if (FAILED(hr))
+		{
+		std::wcerr << L"IPersistStorage::Save failed: 0x" << std::hex << hr
+			<< L"\n";
+		goto cleanup;
+		}
+	persist->SaveCompleted(NULL);
+	storage->Commit(STGC_DEFAULT);
+
+	{
+	HGLOBAL hglobal = NULL;
+	hr = GetHGlobalFromILockBytes(lock_bytes, &hglobal);
+	if (FAILED(hr))
+		{
+		std::wcerr << L"GetHGlobalFromILockBytes failed: 0x" << std::hex
+			<< hr << L"\n";
+		goto cleanup;
+		}
+
+	SIZE_T size = GlobalSize(hglobal);
+	LPVOID data = GlobalLock(hglobal);
+	if (!data)
+		{
+		std::wcerr << L"GlobalLock failed\n";
+		goto cleanup;
+		}
+
+	std::ofstream out(output_path, std::ios::binary | std::ios::trunc);
+	if (!out)
+		{
+		std::wcerr << L"Could not create output file\n";
+		GlobalUnlock(hglobal);
+		goto cleanup;
+		}
+
+	WriteMfcString(out, "0.9");   // must match BROWSERVERSION in cntlitem.cpp
+	for (int i = 0; i < 8; i++)
+		WriteMfcString(out, "");  // company/file/version/... info: unused
+	// productVersion must match the registered control's file version
+	// exactly, or CheckIfLocalOCX() will treat it as "wrong version".
+	WriteMfcString(out, GetOcxProductVersion(clsid_text));
+	DWORD byte_count = static_cast<DWORD>(size);
+	out.write(reinterpret_cast<const char *>(&byte_count),
+		sizeof(byte_count));
+	out.write(static_cast<const char *>(data), static_cast<std::streamsize>(size));
+	GlobalUnlock(hglobal);
+
+	std::wcout << L"Wrote " << size << L" bytes of persisted OLE state to "
+		<< output_path << L"\n";
+	result = 0;
+	}
+
+cleanup:
+	if (persist)
+		persist->Release();
+	if (ole_object)
+		{
+		ole_object->Close(OLECLOSE_NOSAVE);
+		ole_object->Release();
+		}
+	if (storage)
+		storage->Release();
+	if (lock_bytes)
+		lock_bytes->Release();
+	OleUninitialize();
 	return result;
 	}
 
@@ -1053,6 +1305,38 @@ int MonitorProcess(const std::wstring& application,
 				case LOAD_DLL_DEBUG_EVENT:
 					if (event.u.LoadDll.hFile)
 						CloseHandle(event.u.LoadDll.hFile);
+					break;
+
+				case OUTPUT_DEBUG_STRING_EVENT:
+					{
+					// Surfaces TRACE()/OutputDebugString from the browser
+					// (Debug builds only) so ncompass-debug.exe itself can
+					// be used to diagnose historical code without a full
+					// interactive debugger attached.
+					const auto& info = event.u.DebugString;
+					std::vector<char> text(info.nDebugStringLength);
+					SIZE_T read = 0;
+					if (ReadProcessMemory(process.hProcess,
+						info.lpDebugStringData, text.data(), text.size(),
+						&read) && read)
+						{
+						if (info.fUnicode)
+							{
+							std::wstring wide(
+								reinterpret_cast<const wchar_t *>(
+									text.data()),
+								read / sizeof(wchar_t));
+							std::wcerr << L"[debug] " << wide;
+							}
+						else
+							{
+							std::string narrow(text.data(), read);
+							std::wcerr << L"[debug] "
+								<< std::wstring(narrow.begin(),
+									narrow.end());
+							}
+						}
+					}
 					break;
 
 				case EXIT_PROCESS_DEBUG_EVENT:
@@ -1730,6 +2014,9 @@ int wmain(int argc, wchar_t *argv[])
 		return static_cast<int>(exit_code);
 		}
 
+	if (argc == 4 && wcscmp(argv[1], L"--make-ole-state") == 0)
+		return MakeOleState(argv[2], argv[3]);
+
 	if (argc == 6 && wcscmp(argv[1], L"--fetch-worker") == 0)
 		{
 		DWORD operation_timeout = wcstoul(argv[4], NULL, 10);
@@ -1898,7 +2185,9 @@ int wmain(int argc, wchar_t *argv[])
 			<< L"       ncompass-debug --fetch url output-file "
 				L"[timeout-ms] [max-bytes]\n"
 			<< L"       ncompass-debug --wrap [--cwd directory] [--] "
-				L"command [arguments...]\n";
+				L"command [arguments...]\n"
+			<< L"       ncompass-debug --make-ole-state clsid "
+				L"output-file\n";
 		return 2;
 		}
 
